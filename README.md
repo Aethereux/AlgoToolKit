@@ -2,6 +2,7 @@
 
 A C++ toolkit for algorithm analysis and simulation, built with OpenGL and Dear ImGui.
 
+![AlgoToolKit Demo](demo.gif)
 ## Build and Run
 
 This project uses CMake for building.

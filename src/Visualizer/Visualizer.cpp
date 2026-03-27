@@ -42,7 +42,6 @@ float Visualizer::EaseInOutQuad(float t) {
   return t < 0.5f ? 2.0f * t * t : 1.0f - powf(-2.0f * t + 2.0f, 2.0f) / 2.0f;
 }
 
-
 void Visualizer::LerpColor(float &r, float &g, float &b, float &a, float tr,
                            float tg, float tb, float ta, float t) {
   r += (tr - r) * t;
@@ -701,7 +700,8 @@ void Visualizer::RenderScatterPlot(const std::vector<int> &arr,
                                    const ImVec2 &origin, const ImVec2 &size) {
   ImDrawList *dl = ImGui::GetWindowDrawList();
   const int n = static_cast<int>(arr.size());
-  if (n == 0) return;
+  if (n == 0)
+    return;
 
   SyncElementStates(arr);
 
@@ -717,7 +717,8 @@ void Visualizer::RenderScatterPlot(const std::vector<int> &arr,
   float maxH = size.y - 24.0f;
   float xStep = size.x / n;
   float dotRadius = std::min(xStep * 0.4f, 8.0f);
-  if (dotRadius < 1.5f) dotRadius = 1.5f;
+  if (dotRadius < 1.5f)
+    dotRadius = 1.5f;
 
   for (int i = 0; i < n; ++i) {
     const auto &e = m_Elements[i];
@@ -732,7 +733,8 @@ void Visualizer::RenderScatterPlot(const std::vector<int> &arr,
       float pulse = 0.7f + 0.3f * sinf(e.pulsePhase);
       int alpha = static_cast<int>(120.0f * e.glowIntensity * pulse);
       dl->AddCircleFilled(center, r * 3.0f,
-                          (col & 0x00FFFFFF) | (static_cast<ImU32>(alpha) << 24));
+                          (col & 0x00FFFFFF) |
+                              (static_cast<ImU32>(alpha) << 24));
     }
 
     dl->AddCircleFilled(center, r, col);
@@ -744,32 +746,34 @@ void Visualizer::RenderColorSpectrum(const std::vector<int> &arr,
                                      const ImVec2 &origin, const ImVec2 &size) {
   ImDrawList *dl = ImGui::GetWindowDrawList();
   const int n = static_cast<int>(arr.size());
-  if (n == 0) return;
+  if (n == 0)
+    return;
 
   SyncElementStates(arr);
 
   float barWidth = size.x / n;
-  
+
   for (int i = 0; i < n; ++i) {
     const auto &e = m_Elements[i];
-    
+
     // Map height (0.0 to 1.0) to a hue (0.0 to 0.8 to avoid red wrapping)
     float hue = e.currentHeight * 0.8f;
     float r, g, b;
     ImGui::ColorConvertHSVtoRGB(hue, 0.85f, 0.9f, r, g, b);
-    
+
     // If element is actively being compared/swapped, mix with white
     if (e.glowIntensity > 0.01f) {
       r += (1.0f - r) * e.glowIntensity * 0.6f;
       g += (1.0f - g) * e.glowIntensity * 0.6f;
       b += (1.0f - b) * e.glowIntensity * 0.6f;
     }
-    
+
     ImU32 col = IM_COL32((int)(r * 255), (int)(g * 255), (int)(b * 255), 255);
 
     float x = origin.x + i * barWidth;
     ImVec2 barMin(x, origin.y);
-    ImVec2 barMax(x + barWidth + 1.0f, origin.y + size.y); // +1.0f to overlap gaps
+    ImVec2 barMax(x + barWidth + 1.0f,
+                  origin.y + size.y); // +1.0f to overlap gaps
 
     dl->AddRectFilled(barMin, barMax, col);
 
@@ -777,7 +781,7 @@ void Visualizer::RenderColorSpectrum(const std::vector<int> &arr,
       float pulse = 0.7f + 0.3f * sinf(e.pulsePhase);
       int alpha = static_cast<int>(60.0f * e.glowIntensity * pulse);
       ImU32 glowCol = IM_COL32(255, 255, 255, alpha);
-      dl->AddRectFilled(ImVec2(barMin.x - 2.0f, barMin.y), 
+      dl->AddRectFilled(ImVec2(barMin.x - 2.0f, barMin.y),
                         ImVec2(barMax.x + 2.0f, barMax.y), glowCol);
     }
   }
@@ -787,7 +791,8 @@ void Visualizer::RenderStarburst(const std::vector<int> &arr,
                                  const ImVec2 &origin, const ImVec2 &size) {
   ImDrawList *dl = ImGui::GetWindowDrawList();
   const int n = static_cast<int>(arr.size());
-  if (n == 0) return;
+  if (n == 0)
+    return;
 
   SyncElementStates(arr);
 
@@ -834,7 +839,8 @@ void Visualizer::RenderPyramid(const std::vector<int> &arr,
                                const ImVec2 &origin, const ImVec2 &size) {
   ImDrawList *dl = ImGui::GetWindowDrawList();
   const int n = static_cast<int>(arr.size());
-  if (n == 0) return;
+  if (n == 0)
+    return;
 
   SyncElementStates(arr);
 
@@ -848,8 +854,9 @@ void Visualizer::RenderPyramid(const std::vector<int> &arr,
   float barWidth = (size.x - 4.0f) / n;
   float spacing = std::max(1.0f, barWidth * 0.12f);
   float actualW = barWidth - spacing;
-  if (actualW < 1.0f) actualW = 1.0f;
-  
+  if (actualW < 1.0f)
+    actualW = 1.0f;
+
   float maxH = (size.y * 0.5f) - 10.0f;
 
   for (int i = 0; i < n; ++i) {
@@ -866,12 +873,16 @@ void Visualizer::RenderPyramid(const std::vector<int> &arr,
     if (m_Config.showGlow && e.glowIntensity > 0.01f) {
       float pulse = 0.7f + 0.3f * sinf(e.pulsePhase);
       int glowAlpha = static_cast<int>(40.0f * e.glowIntensity * pulse);
-      ImU32 glowCol = (col & 0x00FFFFFF) | (static_cast<ImU32>(glowAlpha) << 24);
+      ImU32 glowCol =
+          (col & 0x00FFFFFF) | (static_cast<ImU32>(glowAlpha) << 24);
       float expand = 4.0f * e.glowIntensity;
       dl->AddRectFilled(ImVec2(barMin.x - expand, barMin.y - expand),
-                        ImVec2(barMax.x + expand, barMax.y + expand), glowCol, 4.0f);
+                        ImVec2(barMax.x + expand, barMax.y + expand), glowCol,
+                        4.0f);
     }
 
-    dl->AddRectFilled(barMin, barMax, col, (m_Config.barStyle == BarStyle::Rounded) ? (actualW * 0.25f) : 0.0f);
+    dl->AddRectFilled(
+        barMin, barMax, col,
+        (m_Config.barStyle == BarStyle::Rounded) ? (actualW * 0.25f) : 0.0f);
   }
 }
