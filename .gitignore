@@ -1,0 +1,28 @@
+# Build directories
+build/
+bin/
+lib/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+imgui.ini
+*.log
+*.exe
+*.o
+*.obj
+*.pdb
+*.d
