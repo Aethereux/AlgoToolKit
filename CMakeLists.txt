@@ -4,6 +4,11 @@ project(AlgoToolkit)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Suppress macOS OpenGL deprecation warnings
+if(APPLE)
+    add_definitions(-DGL_SILENCE_DEPRECATION)
+endif()
+
 # Fetch GLFW automatically
 include(FetchContent)
 FetchContent_Declare(
@@ -21,7 +26,7 @@ find_package(OpenGL REQUIRED)
 
 # Setup ImGui sources
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGui)
-file(GLOB IMGUI_SOURCES
+set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGui/imgui.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGui/imgui_draw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGui/imgui_tables.cpp
@@ -30,21 +35,33 @@ file(GLOB IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGui/backends/imgui_impl_opengl3.cpp
 )
 
+# App sources
+set(APP_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Menu/Menu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Menu/ImGuiHelper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualizer/Visualizer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Algorithms/SortingAlgorithm.cpp
+)
 
-# Your source files
-file(GLOB_RECURSE APP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-file(GLOB_RECURSE APP_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
+# Headers
+set(APP_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Menu/Menu.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualizer/Visualizer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Algorithms/SortingAlgorithm.h
+)
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${APP_SOURCES} ${IMGUI_SOURCES})
 
-# Link dependencies and include directories
+# Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+# Link dependencies
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw OpenGL::GL)
 
 # macOS specific linking
