@@ -25,7 +25,7 @@ jobs:
             executable_name: AlgoToolkit.exe
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install Linux Dependencies
       if: runner.os == 'Linux'
@@ -46,14 +46,14 @@ jobs:
 
     - name: Upload Windows Artifact
       if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: AlgoToolkit-Windows
         path: AlgoToolkit-Windows.zip
 
     - name: Upload Unix Artifacts
       if: runner.os != 'Windows'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact_name }}
         path: ${{github.workspace}}/build/${{ matrix.executable_name }}
