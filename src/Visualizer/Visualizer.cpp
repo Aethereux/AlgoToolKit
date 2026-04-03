@@ -217,6 +217,7 @@ void Visualizer::StepBackward() {
 }
 
 void Visualizer::Reset() {
+  m_Steps.clear();
   m_CurrentStepIndex = -1;
   m_IsPlaying = false;
   m_AnimationProgress = 1.0f;

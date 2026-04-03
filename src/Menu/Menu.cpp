@@ -2,8 +2,8 @@
 #include "../Algorithms/SortingAlgorithm.h"
 #include "../Resources/FontAwesome.h"
 #include "../Visualizer/Visualizer.h"
-#include <chrono>
 #include "ImGuiHelper.h"
+#include <chrono>
 
 Menu::Menu() { m_Visualizer = new Visualizer(); }
 
@@ -46,9 +46,15 @@ void Menu::Render() {
 
   // Determine what UI to show in the sidebar based on the top tabs
   switch (m_SelectedMode) {
-    case 0: RenderSortingTab(sidebarWidth); break;
-    case 1: RenderGraphTab(sidebarWidth); break;
-    case 2: RenderRecursionTab(sidebarWidth); break;
+  case 0:
+    RenderSortingTab(sidebarWidth);
+    break;
+  case 1:
+    RenderGraphTab(sidebarWidth);
+    break;
+  case 2:
+    RenderRecursionTab(sidebarWidth);
+    break;
   }
 
   // Spacer to push credits to bottom
@@ -71,11 +77,14 @@ void Menu::Render() {
   ImGui::SameLine();
 
   ImGui::BeginChild("main", ImVec2(0, 0), false);
-  
+
   // Custom Horizontal Mode Tabs at top of the Graph area
-  const char* modes[] = { "Sorting Algorithms", "MST Algorithms", "Recursion Simulation" };
+  const char *modes[] = {"Sorting Algorithms", "MST Algorithms",
+                         "Recursion Simulation"};
   ImVec4 disabledColor = ImVec4(0.5f, 0.5f, 0.6f, 1.0f);
-  ImGuiHelper::drawTabHorizontally("top_tabs", ImVec2(ImGui::GetContentRegionAvail().x, 45), modes, 3, m_SelectedMode, &disabledColor);
+  ImGuiHelper::drawTabHorizontally("top_tabs",
+                                   ImVec2(ImGui::GetContentRegionAvail().x, 45),
+                                   modes, 3, m_SelectedMode, &disabledColor);
 
   if (m_Visualizer) {
     m_Visualizer->Update();
@@ -139,17 +148,20 @@ void Menu::RenderSortingTab(float sidebarWidth) {
   // Generate & Reset Arrays
   ImGui::Dummy(ImVec2(0, 8));
   ImGui::SetCursorPosX(14);
-  
+
   float halfBtn = (sidebarWidth - 28 - ImGui::GetStyle().ItemSpacing.x) / 2.0f;
-  
+
   ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.25f, 0.35f, 1.0f));
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                        ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
   if (ImGui::Button(ICON_FA_SYNC " Generate", ImVec2(halfBtn, 28))) {
-      if (m_Visualizer) m_Visualizer->GenerateRandomArray(m_Visualizer->GetConfig().arraySize);
+    if (m_Visualizer)
+      m_Visualizer->GenerateRandomArray(m_Visualizer->GetConfig().arraySize);
   }
   ImGui::SameLine();
   if (ImGui::Button(ICON_FA_UNDO " Reset", ImVec2(halfBtn, 28))) {
-      if (m_Visualizer) m_Visualizer->Reset();
+    if (m_Visualizer)
+      m_Visualizer->Reset();
   }
   ImGui::PopStyleColor(2);
 
@@ -163,7 +175,8 @@ void Menu::RenderSortingTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_ButtonActive,
                         ImVec4(0.10f, 0.35f, 0.75f, 1.0f));
 
-  if (ImGui::Button(ICON_FA_PLAY_CIRCLE " Run Algorithm", ImVec2(sidebarWidth - 28, 36))) {
+  if (ImGui::Button(ICON_FA_PLAY_CIRCLE " Run Algorithm",
+                    ImVec2(sidebarWidth - 28, 36))) {
     RunSelectedAlgorithm();
   }
 
@@ -310,7 +323,8 @@ void Menu::RenderGraphTab(float sidebarWidth) {
   ImGui::Dummy(ImVec2(0, 4));
   ImGui::SetCursorPosX(16);
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.5f, 0.2f, 1.0f));
-  ImGui::TextWrapped(ICON_FA_EXCLAMATION_TRIANGLE " MST Algorithms Not Yet Implemented");
+  ImGui::TextWrapped(ICON_FA_EXCLAMATION_TRIANGLE
+                     " MST Algorithms Not Yet Implemented");
   ImGui::PopStyleColor();
   ImGui::Dummy(ImVec2(0, 8));
 
@@ -318,7 +332,7 @@ void Menu::RenderGraphTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
   ImGui::Text(ICON_FA_PROJECT_DIAGRAM "  ALGORITHMS");
   ImGui::PopStyleColor();
-  
+
   ImGui::SetCursorPosX(24);
   ImGui::TextDisabled("Kruskal's Algorithm");
   ImGui::SetCursorPosX(24);
@@ -332,13 +346,13 @@ void Menu::RenderGraphTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
   ImGui::Text(ICON_FA_COG "  GRAPH INPUT");
   ImGui::PopStyleColor();
-  
+
   ImGui::SetCursorPosX(16);
   static int numVertices = 5;
   ImGui::PushItemWidth(sidebarWidth - 80);
   ImGui::SliderInt("Vertices", &numVertices, 3, 20);
   ImGui::PopItemWidth();
-  
+
   ImGui::SetCursorPosX(16);
   ImGui::TextDisabled("Edge Generation Setup");
 
@@ -353,7 +367,8 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   ImGui::Dummy(ImVec2(0, 4));
   ImGui::SetCursorPosX(16);
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.5f, 0.2f, 1.0f));
-  ImGui::TextWrapped(ICON_FA_EXCLAMATION_TRIANGLE " Recursion Sim Not Yet Implemented");
+  ImGui::TextWrapped(ICON_FA_EXCLAMATION_TRIANGLE
+                     " Recursion Sim Not Yet Implemented");
   ImGui::PopStyleColor();
   ImGui::Dummy(ImVec2(0, 8));
 
@@ -361,7 +376,7 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
   ImGui::Text(ICON_FA_REDO "  SIMULATIONS");
   ImGui::PopStyleColor();
-  
+
   ImGui::SetCursorPosX(24);
   ImGui::TextDisabled("Factorial");
   ImGui::SetCursorPosX(24);
@@ -377,7 +392,7 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
   ImGui::Text(ICON_FA_COG "  VARIABLES");
   ImGui::PopStyleColor();
-  
+
   ImGui::SetCursorPosX(16);
   static int nVal = 4;
   ImGui::PushItemWidth(sidebarWidth - 80);
@@ -393,6 +408,9 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
 
 void Menu::RunSelectedAlgorithm() {
   if (!m_Visualizer)
+    return;
+
+  if (m_Visualizer->IsPlaying())
     return;
 
   const std::vector<int> &array = m_Visualizer->GetOriginalArray();
