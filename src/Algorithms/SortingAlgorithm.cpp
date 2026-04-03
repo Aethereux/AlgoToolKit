@@ -88,7 +88,22 @@ void SelectionSort::Sort(std::vector<int> &array) {
 }
 
 void InsertionSort::Sort(std::vector<int> &array) {
-  // Implement Insertion Sort using Visualizer API
-  // Use Compare(idx1, idx2, array), Overwrite(idx, val, array), and
-  // MarkSorted(idx, array)
+  int n = array.size();
+  for(int i = 1; i < n; i++){
+    int element = array[i];
+    int j = i;
+
+    while(j > 0){
+      Compare(j - 1, i, array);
+
+      if(array[j - 1] > element){
+        Overwrite(j, array[j - 1], array);
+        j--;
+      } else{
+        break;
+      }
+    }
+    Overwrite(j, element, array);
+    MarkSorted(i, array);
+  }
 }
