@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 
-// TODO: GROUP MEMBER TASK - Phase 3 (Recursion Simulation)
 // Requirements from PDF:
 // - Demonstrate how recursion works by simulating recursive calls
 // - Must display recursive calls, show base cases, and show return values

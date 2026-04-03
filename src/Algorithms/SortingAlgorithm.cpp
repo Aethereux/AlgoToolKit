@@ -56,12 +56,16 @@ void SortingAlgorithm::MarkSorted(int idx, const std::vector<int> &array) {
 void BubbleSort::Sort(std::vector<int> &array) {
   int n = array.size();
   for (int i = 0; i < n - 1; i++) {
+    bool swapped = false;
     for (int j = 0; j < n - i - 1; j++) {
       Compare(j, j + 1, array);
       if (array[j] > array[j + 1]) {
         Swap(j, j + 1, array);
+        swapped = true;
       }
     }
+    if (!swapped)
+      break;
     MarkSorted(n - i - 1, array);
   }
   MarkSorted(0, array);
@@ -82,24 +86,24 @@ void SelectionSort::Sort(std::vector<int> &array) {
     if (minIndex != i) {
       Swap(i, minIndex, array);
     }
-    
+
     MarkSorted(i, array);
   }
 }
 
 void InsertionSort::Sort(std::vector<int> &array) {
   int n = array.size();
-  for(int i = 1; i < n; i++){
+  for (int i = 1; i < n; i++) {
     int element = array[i];
     int j = i;
 
-    while(j > 0){
+    while (j > 0) {
       Compare(j - 1, i, array);
 
-      if(array[j - 1] > element){
+      if (array[j - 1] > element) {
         Overwrite(j, array[j - 1], array);
         j--;
-      } else{
+      } else {
         break;
       }
     }
