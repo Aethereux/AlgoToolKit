@@ -68,9 +68,23 @@ void BubbleSort::Sort(std::vector<int> &array) {
 }
 
 void SelectionSort::Sort(std::vector<int> &array) {
-  // Implement Selection Sort using Visualizer API
-  // Use Compare(idx1, idx2, array), Swap(idx1, idx2, array), and
-  // MarkSorted(idx, array)
+  int n = array.size();
+  for (int i = 0; i < n; i++) {
+    int minIndex = i;
+
+    for (int j = i + 1; j < n; j++) {
+      Compare(j, minIndex, array);
+      if (array[j] < array[minIndex]) {
+        minIndex = j;
+      }
+    }
+
+    if (minIndex != i) {
+      Swap(i, minIndex, array);
+    }
+    
+    MarkSorted(i, array);
+  }
 }
 
 void InsertionSort::Sort(std::vector<int> &array) {
