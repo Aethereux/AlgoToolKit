@@ -865,6 +865,15 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
     const int maxV =
       std::max(1, *std::max_element(displayArr.begin(), displayArr.end()));
 
+    if (m_Config.showGrid) {
+      constexpr int gridLines = 4;
+      for (int i = 0; i <= gridLines; ++i) {
+        float y = graphTop + (usableHeight / gridLines) * i;
+        dl->AddLine(ImVec2(stackMin.x, y), ImVec2(stackMax.x, y),
+                    IM_COL32(255, 255, 255, 14), 1.0f);
+      }
+    }
+
     dl->AddLine(ImVec2(stackMin.x, graphBottom), ImVec2(stackMax.x, graphBottom),
                 IM_COL32(120, 120, 130, 210), 1.8f);
 
@@ -887,15 +896,44 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
       const float hAnimated = std::max(26.0f, h * reveal);
       const float y1 = y2 - hAnimated;
 
-      const ImU32 topCol = isActiveTop ? IM_COL32(106, 178, 255, 255)
-                   : IM_COL32(80, 160, 255, 250);
-      const ImU32 botCol = isActiveTop ? IM_COL32(46, 104, 190, 255)
-                   : IM_COL32(34, 84, 160, 245);
+      ImVec4 barTheme = GetThemeColorVec(isActiveTop ? StepType::Pivot : StepType::Default);
+      ImVec4 barThemeDark = barTheme;
+      barThemeDark.x *= 0.55f;
+      barThemeDark.y *= 0.55f;
+      barThemeDark.z *= 0.55f;
+      const ImU32 topCol = IM_COL32((int)(barTheme.x * 255), (int)(barTheme.y * 255),
+                                    (int)(barTheme.z * 255), 255);
+      const ImU32 botCol = IM_COL32((int)(barThemeDark.x * 255),
+                                    (int)(barThemeDark.y * 255),
+                                    (int)(barThemeDark.z * 255), 255);
 
-      dl->AddRectFilledMultiColor(ImVec2(x1, y1), ImVec2(x2, y2), topCol, topCol,
-                                  botCol, botCol);
-      dl->AddRect(ImVec2(x1, y1), ImVec2(x2, y2), IM_COL32(170, 210, 255, 230),
-                  5.0f, 0, 1.2f);
+      if (m_Config.showGlow && isActiveTop) {
+        dl->AddRectFilled(ImVec2(x1 - 3.0f, y1 - 4.0f), ImVec2(x2 + 3.0f, y2 + 1.0f),
+                          IM_COL32((int)(barTheme.x * 255), (int)(barTheme.y * 255),
+                                    (int)(barTheme.z * 255), 48),
+                          6.0f);
+      }
+
+      switch (m_Config.barStyle) {
+      case BarStyle::Rounded: {
+        float r = std::min(6.0f, (x2 - x1) * 0.25f);
+        dl->AddRectFilledMultiColor(ImVec2(x1, y1), ImVec2(x2, y2), topCol,
+                                    topCol, botCol, botCol);
+        dl->AddRect(ImVec2(x1, y1), ImVec2(x2, y2), IM_COL32(170, 210, 255, 230),
+                    r, 0, 1.2f);
+        break;
+      }
+      case BarStyle::Sharp: {
+        dl->AddRectFilled(ImVec2(x1, y1), ImVec2(x2, y2), topCol);
+        dl->AddRect(ImVec2(x1, y1), ImVec2(x2, y2), IM_COL32(170, 210, 255, 230));
+        break;
+      }
+      case BarStyle::Gradient: {
+        dl->AddRectFilledMultiColor(ImVec2(x1, y1), ImVec2(x2, y2), topCol,
+                                    topCol, botCol, botCol);
+        break;
+      }
+      }
 
       const int nextValue = (i + 1 < depth) ? displayArr[i + 1] : 1;
       std::string topLabel = std::to_string(n) + " x " + std::to_string(nextValue) +
@@ -907,13 +945,21 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
       dl->AddRectFilled(ImVec2(tx - 5.0f, ty - 2.0f),
             ImVec2(tx + topSize.x + 5.0f, ty + topSize.y + 2.0f),
             IM_COL32(30, 30, 34, 220), 4.0f);
-      dl->AddText(ImVec2(tx, ty), IM_COL32(236, 236, 240, 255), topLabel.c_str());
+      dl->AddText(ImVec2(tx, ty), IM_COL32(238, 238, 242, 255), topLabel.c_str());
 
       std::string callLabel = "f(" + std::to_string(n) + ")";
       ImVec2 callSize = ImGui::CalcTextSize(callLabel.c_str());
       float cx = x1 + (x2 - x1 - callSize.x) * 0.5f;
-      dl->AddText(ImVec2(cx, y2 + 6.0f), IM_COL32(190, 190, 198, 255),
-                  callLabel.c_str());
+      dl->AddText(ImVec2(cx, y2 + 6.0f), IM_COL32(208, 208, 216, 235),
+          callLabel.c_str());
+
+      if (m_Config.showValues) {
+        std::string valueLabel = std::to_string(n);
+        ImVec2 valueSize = ImGui::CalcTextSize(valueLabel.c_str());
+        float vx = x1 + (x2 - x1 - valueSize.x) * 0.5f;
+        float vy = y2 - valueSize.y - 6.0f;
+        dl->AddText(ImVec2(vx, vy), IM_COL32(240, 240, 245, 255), valueLabel.c_str());
+      }
     }
   } else {
     dl->AddText(ImVec2(stackMin.x, stackMin.y + 8.0f), IM_COL32(150, 150, 170, 255),

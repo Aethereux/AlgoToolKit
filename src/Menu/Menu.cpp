@@ -1,7 +1,6 @@
 #include "Menu.h"
 #include "../Algorithms/RecursionAlgorithm.h"
 #include "../Algorithms/SortingAlgorithm.h"
-#include "../Algorithms/RecursionAlgorithm.h" // Added for recursion simulations
 #include "../Resources/FontAwesome.h"
 #include "../Visualizer/Visualizer.h"
 #include "ImGuiHelper.h"
@@ -89,8 +88,20 @@ void Menu::Render() {
                                    modes, 3, m_SelectedMode, &disabledColor);
 
   if (m_Visualizer) {
-    m_Visualizer->Update();
-    m_Visualizer->Render();
+    if (m_SelectedMode == 2 && m_SelectedRecursionSimulation == 0) {
+      m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
+    } else {
+      m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
+    }
+
+    if (m_SelectedMode == 2 && m_SelectedRecursionSimulation == 2 &&
+        m_Visualizer->HasTowerOfHanoiSimulation()) {
+      m_Visualizer->UpdateTowerOfHanoi(ImGui::GetIO().DeltaTime);
+      m_Visualizer->RenderTowerOfHanoi();
+    } else {
+      m_Visualizer->Update();
+      m_Visualizer->Render();
+    }
   }
   ImGui::EndChild();
 
@@ -359,8 +370,6 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   ImGui::Dummy(ImVec2(0, 4));
   ImGui::SetCursorPosX(16);
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.5f, 0.2f, 1.0f));
-  ImGui::TextWrapped(ICON_FA_EXCLAMATION_TRIANGLE
-                     " Recursion Sim Not Yet Implemented");
   ImGui::PopStyleColor();
   ImGui::Dummy(ImVec2(0, 8));
 
@@ -369,12 +378,62 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   ImGui::Text(ICON_FA_REDO "  SIMULATIONS");
   ImGui::PopStyleColor();
 
-  ImGui::SetCursorPosX(24);
-  ImGui::TextDisabled("Factorial");
-  ImGui::SetCursorPosX(24);
-  ImGui::TextDisabled("Fibonacci");
-  ImGui::SetCursorPosX(24);
-  ImGui::TextDisabled("Tower of Hanoi");
+  ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.20f, 0.25f, 0.40f, 0.6f));
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
+                        ImVec4(0.25f, 0.30f, 0.50f, 0.7f));
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive,
+                        ImVec4(0.30f, 0.35f, 0.55f, 0.9f));
+
+  const char *simulations[] = {"Factorial", "Fibonacci", "Tower of Hanoi"};
+  for (int i = 0; i < 3; i++) {
+    ImGui::SetCursorPosX(12);
+    bool selected = (m_SelectedRecursionSimulation == i);
+    if (ImGui::Selectable(simulations[i], selected, 0,
+                          ImVec2(sidebarWidth - 28, 28))) {
+      m_SelectedRecursionSimulation = i;
+      if (m_SelectedRecursionSimulation != 2 && m_Visualizer)
+        m_Visualizer->ClearTowerOfHanoiSimulation();
+    }
+
+    if (selected) {
+      ImGui::SetCursorPosX(36);
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 0.8f));
+      ImGui::PopStyleColor();
+    }
+  }
+
+  ImGui::PopStyleColor(3);
+
+  ImGui::Dummy(ImVec2(0, 8));
+  ImGui::SetCursorPosX(12);
+  ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.25f, 0.35f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                        ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
+  if (ImGui::Button(ICON_FA_UNDO " Reset", ImVec2(sidebarWidth - 28, 28))) {
+    m_RecursionN = 4;
+    if (m_Visualizer) {
+      if (m_SelectedRecursionSimulation == 2) {
+        m_Visualizer->SetTowerOfHanoiSimulation({}, m_RecursionN);
+      } else {
+        m_Visualizer->ClearTowerOfHanoiSimulation();
+      }
+      m_Visualizer->Reset();
+    }
+  }
+  ImGui::PopStyleColor(2);
+
+  ImGui::Dummy(ImVec2(0, 12));
+  ImGui::SetCursorPosX(12);
+  ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.45f, 0.85f, 0.9f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                        ImVec4(0.20f, 0.55f, 0.95f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                        ImVec4(0.10f, 0.35f, 0.75f, 1.0f));
+  if (ImGui::Button(ICON_FA_PLAY_CIRCLE " Run Simulation",
+                    ImVec2(sidebarWidth - 28, 36))) {
+    RunRecursionSimulation();
+  }
+  ImGui::PopStyleColor(3);
 
     ImGui::Dummy(ImVec2(0, 8));
     ImGui::Separator();
@@ -382,20 +441,47 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
 
   ImGui::SetCursorPosX(16);
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
-  ImGui::Text(ICON_FA_COG "  VARIABLES");
+  ImGui::Text(ICON_FA_COG "  SETTINGS");
   ImGui::PopStyleColor();
+  ImGui::Dummy(ImVec2(0, 4));
 
-  ImGui::SetCursorPosX(16);
-  static int nVal = 4;
-  ImGui::PushItemWidth(sidebarWidth - 80);
-  ImGui::SliderInt("N value", &nVal, 1, 10);
-  ImGui::PopItemWidth();
+  if (m_Visualizer) {
+    auto &config = m_Visualizer->GetConfig();
 
-  ImGui::Dummy(ImVec2(0, 16));
-  ImGui::SetCursorPosX(12);
-  ImGui::BeginDisabled(true);
-  ImGui::Button("Run Simulation", ImVec2(sidebarWidth - 28, 36));
-  ImGui::EndDisabled();
+    ImGui::SetCursorPosX(16);
+    ImGui::PushItemWidth(sidebarWidth - 80);
+
+    ImGui::SliderInt("N value", &m_RecursionN, 1, 10);
+    ImGui::SetCursorPosX(16);
+    ImGui::SliderInt("Speed##rec_sp", &config.animationSpeed, 1, 200);
+    ImGui::SetCursorPosX(16);
+
+    const char *themes[] = {"Cyberpunk", "Ocean", "Sunset", "Matrix", "Pastel"};
+    int themeIdx = static_cast<int>(config.theme);
+    if (ImGui::Combo("Theme##rec_th", &themeIdx, themes, 5))
+      config.theme = static_cast<ColorTheme>(themeIdx);
+    ImGui::SetCursorPosX(16);
+
+    const char *styles[] = {"Rounded", "Sharp", "Gradient"};
+    int styleIdx = static_cast<int>(config.barStyle);
+    if (ImGui::Combo("Style##rec_st", &styleIdx, styles, 3))
+      config.barStyle = static_cast<BarStyle>(styleIdx);
+
+    ImGui::PopItemWidth();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 4));
+    ImGui::Checkbox("Smooth##rec_sm", &config.smoothAnimation);
+    ImGui::SameLine();
+    ImGui::Checkbox("Glow##rec_gl", &config.showGlow);
+    ImGui::SameLine();
+    ImGui::Checkbox("Values##rec_va", &config.showValues);
+
+    ImGui::SetCursorPosX(16);
+    ImGui::Checkbox("Grid##rec_gr", &config.showGrid);
+    ImGui::SameLine();
+    ImGui::Checkbox("Highlight##rec_hi", &config.highlightOps);
+    ImGui::PopStyleVar();
+  }
 }
 
 void Menu::RunSelectedAlgorithm() {
@@ -465,11 +551,23 @@ void Menu::RunRecursionSimulation() {
     sim = new FactorialAlgorithm(m_Visualizer);
     m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
     sim->Factorial(m_RecursionN);
+    m_Visualizer->ClearTowerOfHanoiSimulation();
+  } else if (m_SelectedRecursionSimulation == 2) {
+    Recursion recursion;
+    recursion.TowerOfHanoi(m_RecursionN, 'A', 'B', 'C');
+    m_Visualizer->SetTowerOfHanoiSimulation(recursion.GetTowerMoves(),
+                                            m_RecursionN);
+    m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
+  } else {
+    m_Visualizer->ClearTowerOfHanoiSimulation();
+    m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
   }
 
   if (sim) {
     delete sim;
     m_HasRun = true;
     m_Visualizer->Play();
+  } else if (m_SelectedRecursionSimulation == 2) {
+    m_HasRun = true;
   }
 }

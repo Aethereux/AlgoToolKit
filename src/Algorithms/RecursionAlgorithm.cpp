@@ -50,6 +50,13 @@ int FactorialAlgorithm::Factorial(int n) {
     return result;
 }
 
+int Recursion::Factorial(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * Factorial(n - 1);
+}
+
 int Recursion::Fibonacci(int n){
     if(n <= 1){
         return n;
