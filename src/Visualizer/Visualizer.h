@@ -6,16 +6,6 @@
 
 enum class StepType { Compare, Swap, Overwrite, Sorted, Pivot, Merge, Default };
 
-enum class VizType {
-  BarGraph,
-  LineGraph,
-  Circular,
-  ScatterPlot,
-  ColorSpectrum,
-  Starburst,
-  Pyramid
-};
-
 enum class ColorTheme { Cyberpunk, Ocean, Sunset, Matrix, Pastel };
 
 enum class BarStyle { Rounded, Sharp, Gradient };
@@ -55,7 +45,6 @@ struct VisualizerConfig {
   bool showGrid = true;
   bool highlightOps = true;
   bool showGlow = true;
-  bool showConnections = true;
   float barSpacing = 2.0f;
 };
 
@@ -95,18 +84,6 @@ private:
   // Visualizations
   void RenderBarGraph(const std::vector<int> &arr, const ImVec2 &origin,
                       const ImVec2 &size);
-  void RenderLineGraph(const std::vector<int> &arr, const ImVec2 &origin,
-                       const ImVec2 &size);
-  void RenderCircular(const std::vector<int> &arr, const ImVec2 &origin,
-                      const ImVec2 &size);
-  void RenderScatterPlot(const std::vector<int> &arr, const ImVec2 &origin,
-                         const ImVec2 &size);
-  void RenderColorSpectrum(const std::vector<int> &arr, const ImVec2 &origin,
-                           const ImVec2 &size);
-  void RenderStarburst(const std::vector<int> &arr, const ImVec2 &origin,
-                       const ImVec2 &size);
-  void RenderPyramid(const std::vector<int> &arr, const ImVec2 &origin,
-                     const ImVec2 &size);
 
   // Animation helpers
   void UpdateElementStates(float dt);
