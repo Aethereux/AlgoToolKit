@@ -1,7 +1,7 @@
 #include "RecursionAlgorithm.h"
 #include <iostream>
 
-int Factorial::Factorial(int n) {
+int Recursion::Factorial(int n) {
     if (n <= 1) {
         return 1;
     }
@@ -10,7 +10,7 @@ int Factorial::Factorial(int n) {
     return result;
 }
 
-int RecursionAlgorithm::Fibonacci(int n){
+int Recursion::Fibonacci(int n){
     if(n <= 1){
         return n;
     }
@@ -18,13 +18,22 @@ int RecursionAlgorithm::Fibonacci(int n){
     return Fibonacci(n - 1) + Fibonacci(n - 2);
 }
 
-void RecursionAlgorithm::TowerOfHanoi(int numDisks, char source, char auxiliary, char destination){
+void Recursion::TowerOfHanoi(int numDisks, char source, char auxiliary, char destination){
+    m_TowerMoves.clear();
+    TowerOfHanoiTracked(numDisks, source, auxiliary, destination);
+}
+
+void Recursion::TowerOfHanoiTracked(int numDisks, char source, char auxiliary, char destination) {
     if(numDisks <= 0){
         return;
     }
 
-    TowerOfHanoi(numDisks - 1, source, destination, auxiliary);
-    std::cout << "Move disk " << numDisks << " from " << source << " to " << destination << std::endl;
+    TowerOfHanoiTracked(numDisks - 1, source, destination, auxiliary);
+    m_TowerMoves.push_back({source, destination});
+   
+    TowerOfHanoiTracked(numDisks - 1, auxiliary, source, destination);
+}
 
-    TowerOfHanoi(numDisks - 1, auxiliary, source, destination);
+const std::vector<std::pair<char, char>>& Recursion::GetTowerMoves() const {
+    return m_TowerMoves;
 }

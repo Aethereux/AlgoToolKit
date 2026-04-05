@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <utility>
 #include <vector>
 
 // Requirements from PDF:
@@ -20,16 +21,18 @@ public:
     // TODO: Implement Tower of Hanoi tracking disk movements
     // Example Output: Move disk 1 from A to C
     virtual void TowerOfHanoi(int numDisks, char source, char auxiliary, char destination) = 0;
-protected:
-    Visualizer* m_Visualizer;
 };
 
 
-class Factorial : public RecursionAlgorithm {
+class Recursion : public RecursionAlgorithm {
 public:
-    using RecursionAlgorithm::RecursionAlgorithm;
-
     int Factorial(int n) override;
-    int Fibonacci(int n) override { return 0; }
-    void TowerOfHanoi(int numDisks, char source, char auxiliary, char destination) override {}
-}
+    int Fibonacci(int n) override;
+    void TowerOfHanoi(int numDisks, char source, char auxiliary, char destination) override;
+
+    const std::vector<std::pair<char, char>>& GetTowerMoves() const;
+
+private:
+    void TowerOfHanoiTracked(int numDisks, char source, char auxiliary, char destination);
+    std::vector<std::pair<char, char>> m_TowerMoves;
+};

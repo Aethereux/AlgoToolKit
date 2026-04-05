@@ -31,6 +31,8 @@ private:
     Visualizer* m_Visualizer = nullptr;
     int m_SelectedAlgorithm = 0;
     int m_SelectedMode = 0;
+    int m_SelectedRecursion = 0;
+    int m_RecursionN = 4;
     bool m_HasRun = false;
     double m_LastExecutionTimeMs = 0.0;
     int m_LastOperationsCount = 0;

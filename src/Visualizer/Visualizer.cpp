@@ -224,6 +224,284 @@ void Visualizer::Reset() {
   SyncElementStates(m_OriginalArray);
 }
 
+void Visualizer::SetTowerOfHanoiSimulation(
+    const std::vector<std::pair<char, char>> &moves, int diskCount) {
+  m_TowerMoves = moves;
+  m_TowerDiskCount = std::max(1, diskCount);
+  m_TowerStep = 0;
+  m_TowerPlayTimer = 0.0f;
+  m_TowerPlaying = !m_TowerMoves.empty();
+  m_ShowTowerIllustration = true;
+}
+
+void Visualizer::ClearTowerOfHanoiSimulation() {
+  m_ShowTowerIllustration = false;
+  m_TowerPlaying = false;
+  m_TowerPlayTimer = 0.0f;
+  m_TowerStep = 0;
+  m_TowerDiskCount = 4;
+  m_TowerMoves.clear();
+}
+
+void Visualizer::UpdateTowerOfHanoi(float dt) {
+  if (!m_ShowTowerIllustration || !m_TowerPlaying)
+    return;
+
+  int maxStep = static_cast<int>(m_TowerMoves.size());
+  if (m_TowerStep >= maxStep) {
+    m_TowerPlaying = false;
+    m_TowerMoveProgress = 0.0f;
+    return;
+  }
+
+  float stepInterval = 1.75f;
+  float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.002f);
+  if (speedScale < 0.65f)
+    speedScale = 0.65f;
+  if (speedScale > 1.0f)
+    speedScale = 1.0f;
+  stepInterval *= speedScale;
+
+  m_TowerPlayTimer += dt;
+  m_TowerMoveProgress = m_TowerPlayTimer / stepInterval;
+  if (m_TowerMoveProgress >= 1.0f) {
+    m_TowerPlayTimer = 0.0f;
+    m_TowerMoveProgress = 0.0f;
+    ++m_TowerStep;
+    if (m_TowerStep >= maxStep) {
+      m_TowerStep = maxStep;
+      m_TowerPlaying = false;
+    }
+  }
+}
+
+void Visualizer::RenderTowerOfHanoi() {
+  if (!m_ShowTowerIllustration)
+    return;
+
+  int maxStep = static_cast<int>(m_TowerMoves.size());
+
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 6));
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));
+
+  if (m_TowerPlaying) {
+    ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(200, 80, 60, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(220, 100, 80, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(180, 65, 50, 255));
+  } else {
+    ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(50, 180, 100, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(70, 200, 120, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(40, 160, 90, 255));
+  }
+
+  if (ImGui::Button(m_TowerPlaying ? ICON_FA_PAUSE "  Pause"
+                                   : ICON_FA_PLAY "  Play")) {
+    if (m_TowerStep >= maxStep)
+      m_TowerStep = 0;
+    m_TowerPlaying = !m_TowerPlaying;
+    m_TowerPlayTimer = 0.0f;
+    m_TowerMoveProgress = 0.0f;
+  }
+  ImGui::PopStyleColor(3);
+
+  ImGui::SameLine();
+  if (ImGui::Button(ICON_FA_STEP_BACKWARD)) {
+    m_TowerPlaying = false;
+    m_TowerPlayTimer = 0.0f;
+    m_TowerMoveProgress = 0.0f;
+    if (m_TowerStep > 0)
+      --m_TowerStep;
+  }
+
+  ImGui::SameLine();
+  if (ImGui::Button(ICON_FA_STEP_FORWARD)) {
+    m_TowerPlaying = false;
+    m_TowerPlayTimer = 0.0f;
+    m_TowerMoveProgress = 0.0f;
+    if (m_TowerStep < maxStep)
+      ++m_TowerStep;
+  }
+
+  ImGui::SameLine();
+  ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.7f, 1.0f), "Step %d / %d",
+                     m_TowerStep, maxStep);
+  ImGui::PopStyleVar(3);
+
+  auto pegIndex = [](char peg) {
+    switch (peg) {
+    case 'A':
+      return 0;
+    case 'B':
+      return 1;
+    default:
+      return 2;
+    }
+  };
+
+  std::vector<int> pegs[3];
+  for (int disk = m_TowerDiskCount; disk >= 1; --disk)
+    pegs[0].push_back(disk);
+
+  int movingDisk = -1;
+  int movingFromPeg = -1;
+  int movingToPeg = -1;
+  int lastMovedDisk = -1;
+  char lastMovedFrom = 'A';
+  char lastMovedTo = 'A';
+
+  for (int i = 0; i < m_TowerStep && i < maxStep; ++i) {
+    const auto &move = m_TowerMoves[static_cast<size_t>(i)];
+    int from = pegIndex(move.first);
+    int to = pegIndex(move.second);
+    if (pegs[from].empty())
+      continue;
+    int disk = pegs[from].back();
+    pegs[from].pop_back();
+    pegs[to].push_back(disk);
+    lastMovedDisk = disk;
+    lastMovedFrom = move.first;
+    lastMovedTo = move.second;
+  }
+
+  if (m_TowerStep < maxStep && (m_TowerPlaying || m_TowerMoveProgress > 0.0f)) {
+    movingFromPeg = pegIndex(m_TowerMoves[static_cast<size_t>(m_TowerStep)].first);
+    movingToPeg = pegIndex(m_TowerMoves[static_cast<size_t>(m_TowerStep)].second);
+    if (!pegs[movingFromPeg].empty()) {
+      movingDisk = pegs[movingFromPeg].back();
+      pegs[movingFromPeg].pop_back();
+    }
+  }
+
+  ImGui::Dummy(ImVec2(0, 6));
+
+  ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+  canvasSize.y -= 28.0f;
+  if (canvasSize.y < 80.0f)
+    canvasSize.y = 80.0f;
+
+  ImVec2 origin = ImGui::GetCursorScreenPos();
+  ImDrawList *drawList = ImGui::GetWindowDrawList();
+
+  float baseY = origin.y + canvasSize.y - 78.0f;
+  float centerY = baseY - 108.0f;
+  float pegHeight = 210.0f;
+  float pegX[3] = {
+      origin.x + canvasSize.x * 0.24f,
+      origin.x + canvasSize.x * 0.50f,
+      origin.x + canvasSize.x * 0.76f,
+  };
+
+  drawList->AddRectFilled(ImVec2(origin.x + 70.0f, baseY),
+                          ImVec2(origin.x + canvasSize.x - 70.0f, baseY + 8.0f),
+                          IM_COL32(120, 120, 130, 255), 4.0f);
+
+  for (int peg = 0; peg < 3; ++peg) {
+    drawList->AddRectFilled(ImVec2(pegX[peg] - 4.0f, centerY - pegHeight / 2),
+                            ImVec2(pegX[peg] + 4.0f, centerY + pegHeight / 2),
+                            IM_COL32(180, 180, 200, 255), 2.0f);
+  }
+
+  float minW = 26.0f;
+  float maxW = 112.0f;
+  float diskH = 14.0f;
+  float denom = (m_TowerDiskCount > 1) ? static_cast<float>(m_TowerDiskCount - 1) : 1.0f;
+  ImU32 standbyColor = GetThemeColor(StepType::Default);
+  ImU32 chosenColor = GetThemeColor(StepType::Compare);
+
+  for (int peg = 0; peg < 3; ++peg) {
+    for (size_t level = 0; level < pegs[peg].size(); ++level) {
+      int disk = pegs[peg][level];
+      float t = static_cast<float>(disk - 1) / denom;
+      float diskW = minW + t * (maxW - minW);
+      float yBottom = baseY - 3.0f - static_cast<float>(level) * (diskH + 3.0f);
+      float yTop = yBottom - diskH;
+      ImU32 color = standbyColor;
+      drawList->AddRectFilled(ImVec2(pegX[peg] - diskW * 0.5f, yTop),
+                              ImVec2(pegX[peg] + diskW * 0.5f, yBottom),
+                              color, 4.0f);
+    }
+  }
+
+  if (movingDisk > 0 && movingFromPeg >= 0 && movingToPeg >= 0) {
+    float diskT = static_cast<float>(movingDisk - 1) / denom;
+    float diskW = minW + diskT * (maxW - minW);
+
+    float sourceLevel = static_cast<float>(pegs[movingFromPeg].size());
+    float destLevel = static_cast<float>(pegs[movingToPeg].size());
+
+    float sourceBottom = baseY - 3.0f - sourceLevel * (diskH + 3.0f);
+    float destBottom = baseY - 3.0f - destLevel * (diskH + 3.0f);
+    float sourceTop = sourceBottom - diskH;
+    float destTop = destBottom - diskH;
+
+    float moveDuration = 1.75f;
+    float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.002f);
+    if (speedScale < 0.65f)
+      speedScale = 0.65f;
+    if (speedScale > 1.0f)
+      speedScale = 1.0f;
+    moveDuration *= speedScale;
+
+    float phase = std::min(1.0f, m_TowerMoveProgress);
+    float liftEnd = 0.18f;
+    float holdEnd = liftEnd + (0.25f / moveDuration);
+    if (holdEnd > 0.85f)
+      holdEnd = 0.85f;
+    float slideEnd = holdEnd + 0.20f;
+    if (slideEnd > 0.95f)
+      slideEnd = 0.95f;
+    float peakY = centerY - pegHeight * 0.55f - 20.0f;
+    float x = pegX[movingFromPeg];
+    float y = sourceTop;
+
+    if (phase < liftEnd) {
+      float t = EaseOutCubic(phase / liftEnd);
+      y = sourceTop + (peakY - sourceTop) * t;
+    } else if (phase < holdEnd) {
+      y = peakY;
+      x = pegX[movingFromPeg];
+    } else if (phase < slideEnd) {
+      float t = EaseInOutQuad((phase - holdEnd) / (slideEnd - holdEnd));
+      x = pegX[movingFromPeg] + (pegX[movingToPeg] - pegX[movingFromPeg]) * t;
+      y = peakY;
+    } else {
+      float t = EaseInOutQuad((phase - slideEnd) / (1.0f - slideEnd));
+      x = pegX[movingToPeg];
+      y = peakY + (destTop - peakY) * t;
+    }
+
+    drawList->AddRectFilled(ImVec2(x - diskW * 0.5f, y),
+                            ImVec2(x + diskW * 0.5f, y + diskH),
+                            chosenColor, 4.0f);
+  }
+
+  drawList->AddText(ImVec2(pegX[0] - 4.0f, baseY + 14.0f), IM_COL32_WHITE, "A");
+  drawList->AddText(ImVec2(pegX[1] - 4.0f, baseY + 14.0f), IM_COL32_WHITE, "B");
+  drawList->AddText(ImVec2(pegX[2] - 4.0f, baseY + 14.0f), IM_COL32_WHITE, "C");
+
+  ImGui::Dummy(canvasSize);
+
+  char moveText[96];
+  if (movingDisk > 0 && movingFromPeg >= 0 && movingToPeg >= 0) {
+    snprintf(moveText, sizeof(moveText), "Move disk %d from %c to %c",
+             movingDisk, m_TowerMoves[static_cast<size_t>(m_TowerStep)].first,
+             m_TowerMoves[static_cast<size_t>(m_TowerStep)].second);
+  } else if (lastMovedDisk > 0) {
+    snprintf(moveText, sizeof(moveText), "Move disk %d from %c to %c",
+             lastMovedDisk, lastMovedFrom, lastMovedTo);
+  } else {
+    snprintf(moveText, sizeof(moveText), "Ready - run an algorithm, then press Play");
+  }
+
+  ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.6f, 1.0f), "%s", moveText);
+  ImGui::SameLine(ImGui::GetContentRegionAvail().x - 110);
+  float progress =
+      maxStep > 0 ? static_cast<float>(m_TowerStep) / static_cast<float>(maxStep)
+                  : 0.0f;
+  ImGui::ProgressBar(progress, ImVec2(100, 0));
+}
+
 void Visualizer::SyncElementStates(const std::vector<int> &arr) {
   float maxVal =
       arr.empty()

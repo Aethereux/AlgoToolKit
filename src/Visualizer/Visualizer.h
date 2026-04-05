@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include <string>
+#include <utility>
 #include <vector>
 
 enum class StepType { Compare, Swap, Overwrite, Sorted, Pivot, Merge, Default };
@@ -66,6 +67,13 @@ public:
   void StepBackward();
   void Reset();
 
+  void SetTowerOfHanoiSimulation(const std::vector<std::pair<char, char>> &moves,
+                                 int diskCount);
+  void ClearTowerOfHanoiSimulation();
+  bool HasTowerOfHanoiSimulation() const { return m_ShowTowerIllustration; }
+  void UpdateTowerOfHanoi(float dt);
+  void RenderTowerOfHanoi();
+
   bool IsPlaying() const { return m_IsPlaying; }
   int GetCurrentStepIndex() const { return m_CurrentStepIndex; }
   int GetTotalSteps() const { return static_cast<int>(m_Steps.size()); }
@@ -111,6 +119,14 @@ private:
   float m_PlayTimer = 0.0f;
   float m_AnimationProgress = 1.0f;
   float m_GlobalTime = 0.0f;
+
+  bool m_ShowTowerIllustration = false;
+  bool m_TowerPlaying = false;
+  float m_TowerPlayTimer = 0.0f;
+  float m_TowerMoveProgress = 0.0f;
+  int m_TowerStep = 0;
+  int m_TowerDiskCount = 4;
+  std::vector<std::pair<char, char>> m_TowerMoves;
 
   VisualizerConfig m_Config;
 };
