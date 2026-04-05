@@ -318,8 +318,46 @@ void Visualizer::UpdateTowerOfHanoi(float dt) {
 }
 
 void Visualizer::RenderTowerOfHanoi() {
-  if (!m_ShowTowerIllustration)
+  if (!m_ShowTowerIllustration) {
+    // Match post-start vertical anchor: reserve controls row + spacer.
+    ImGui::Dummy(ImVec2(0.0f, ImGui::GetFrameHeightWithSpacing() + 6.0f));
+
+    ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+    canvasSize.y -= 28.0f;
+    if (canvasSize.y < 80.0f)
+      canvasSize.y = 80.0f;
+    if (canvasSize.x < 100.0f)
+      canvasSize.x = 100.0f;
+
+    ImVec2 origin = ImGui::GetCursorScreenPos();
+    ImDrawList *drawList = ImGui::GetWindowDrawList();
+
+    float lineH = ImGui::GetTextLineHeightWithSpacing();
+    float boxW = canvasSize.x * 0.30f - 24.0f;
+    float boxH = 14.0f + (lineH * 7.0f) + 10.0f;
+    ImVec2 boxMin(origin.x + canvasSize.x - boxW - 12.0f, origin.y + 12.0f);
+    ImVec2 boxMax(boxMin.x + boxW, boxMin.y + boxH);
+    drawList->AddRectFilled(boxMin, boxMax, IM_COL32(18, 22, 30, 210), 8.0f);
+    drawList->AddRect(boxMin, boxMax, IM_COL32(110, 125, 150, 170), 8.0f, 0,
+                      1.5f);
+    drawList->AddText(ImVec2(boxMin.x + 6.0f, boxMin.y - lineH - 4.0f),
+                      IM_COL32(200, 215, 235, 230), "Calls and Returns");
+    drawList->AddText(ImVec2(boxMin.x + 10.0f, boxMin.y + 10.0f),
+                      IM_COL32(160, 170, 190, 210), "No trace yet.");
+
+    const char *centerMsg =
+      "Click \"Run Simulation\" to view the Tower of Hanoi illustration";
+    ImVec2 centerMsgSize = ImGui::CalcTextSize(centerMsg);
+    ImVec2 centerMsgPos(origin.x + (canvasSize.x - centerMsgSize.x) * 0.5f,
+              origin.y + (canvasSize.y - centerMsgSize.y) * 0.5f);
+    drawList->AddText(centerMsgPos, IM_COL32(170, 180, 200, 220), centerMsg);
+
+    ImGui::Dummy(canvasSize);
+    ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.7f, 1.0f), "Tower of Hanoi Recursion");
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 110);
+    ImGui::ProgressBar(0.0f, ImVec2(100, 0), "0%");
     return;
+  }
 
   int maxStep = static_cast<int>(m_TowerMoves.size());
 
@@ -524,6 +562,114 @@ void Visualizer::RenderTowerOfHanoi() {
   drawList->AddText(ImVec2(pegX[1] - 4.0f, baseY + 14.0f), IM_COL32_WHITE, "B");
   drawList->AddText(ImVec2(pegX[2] - 4.0f, baseY + 14.0f), IM_COL32_WHITE, "C");
 
+  // Top-right trace panel (same geometry as Fibonacci panel)
+  float lineH = ImGui::GetTextLineHeightWithSpacing();
+  float boxW = canvasSize.x * 0.30f - 24.0f;
+  float boxH = 14.0f + (lineH * 7.0f) + 10.0f;
+  ImVec2 boxMin(origin.x + canvasSize.x - boxW - 12.0f, origin.y + 12.0f);
+  ImVec2 boxMax(boxMin.x + boxW, boxMin.y + boxH);
+  drawList->AddRectFilled(boxMin, boxMax, IM_COL32(18, 22, 30, 210), 8.0f);
+  drawList->AddRect(boxMin, boxMax, IM_COL32(110, 125, 150, 170), 8.0f, 0, 1.5f);
+  drawList->AddText(ImVec2(boxMin.x + 6.0f, boxMin.y - lineH - 4.0f),
+                    IM_COL32(200, 215, 235, 230), "Calls and Returns");
+
+  ImVec2 scrollMin(boxMin.x + 8.0f, boxMin.y + 4.0f);
+  ImVec2 scrollSize(boxW - 16.0f, boxMax.y - scrollMin.y - 8.0f);
+  ImGui::SetCursorScreenPos(scrollMin);
+  ImGui::PushID("tower_trace_scroll");
+  ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0, 0, 0, 0));
+  ImGui::BeginChild("content", scrollSize, false,
+                    ImGuiWindowFlags_AlwaysVerticalScrollbar |
+                        ImGuiWindowFlags_NoMove |
+                        ImGuiWindowFlags_NoNav);
+
+  const float contentPadTopY = 1.5f;
+  const float contentPadBottomY = 2.0f;
+  ImGui::Dummy(ImVec2(0.0f, contentPadTopY));
+
+  if (m_TowerTrace.empty()) {
+    ImGui::TextColored(ImVec4(0.62f, 0.66f, 0.74f, 0.85f), "No trace yet.");
+  } else {
+    int revealedMoveCount = m_TowerStep;
+    if (m_TowerPlaying && m_TowerMoveProgress > 0.0f)
+      revealedMoveCount = std::min(maxStep, m_TowerStep + 1);
+
+    size_t visibleTraceCount = 0;
+    int moveSeen = 0;
+    for (size_t i = 0; i < m_TowerTrace.size(); ++i) {
+      const bool isMove = (m_TowerTrace[i].rfind("Move:", 0) == 0);
+      if (isMove && moveSeen >= revealedMoveCount)
+        break;
+      visibleTraceCount = i + 1;
+      if (isMove)
+        ++moveSeen;
+    }
+
+    if (visibleTraceCount == 0)
+      visibleTraceCount = std::min<size_t>(1, m_TowerTrace.size());
+
+    auto getTraceKind = [](const std::string &line) {
+      if (line.rfind("Call:", 0) == 0)
+        return 0;
+      if (line.rfind("Return:", 0) == 0)
+        return 1;
+      if (line.rfind("Base", 0) == 0)
+        return 2;
+      if (line.rfind("Move:", 0) == 0)
+        return 3;
+      return 4;
+    };
+
+    for (size_t i = 0; i < visibleTraceCount; ++i) {
+      ImVec2 linePos = ImGui::GetCursorScreenPos();
+
+      std::string displayText = m_TowerTrace[i];
+      const float maxTextWidth = scrollSize.x - 24.0f;
+      if (ImGui::CalcTextSize(displayText.c_str()).x > maxTextWidth) {
+        const char *ellipsis = "...";
+        while (!displayText.empty()) {
+          std::string candidate = displayText + ellipsis;
+          if (ImGui::CalcTextSize(candidate.c_str()).x <= maxTextWidth) {
+            displayText = candidate;
+            break;
+          }
+          displayText.pop_back();
+        }
+        if (displayText.empty())
+          displayText = ellipsis;
+      }
+
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.72f, 0.76f, 0.84f, 0.95f));
+      ImGui::SetCursorScreenPos(ImVec2(linePos.x + 4.0f, linePos.y));
+      ImGui::TextUnformatted(displayText.c_str());
+      ImGui::PopStyleColor();
+
+      // Add spacing after a return only when the next meaningful line is
+      // outside the call/return group.
+      if (getTraceKind(m_TowerTrace[i]) == 1) {
+        size_t nextIndex = i + 1;
+        while (nextIndex < m_TowerTrace.size() && m_TowerTrace[nextIndex].empty())
+          ++nextIndex;
+
+        if (nextIndex < m_TowerTrace.size()) {
+          int nextKind = getTraceKind(m_TowerTrace[nextIndex]);
+          if (nextKind != 0 && nextKind != 1)
+            ImGui::Dummy(ImVec2(0.0f, lineH * 0.45f));
+        }
+      }
+
+      if (m_TowerPlaying && i + 1 == visibleTraceCount)
+        ImGui::SetScrollHereY(1.0f);
+    }
+  }
+
+  ImGui::Dummy(ImVec2(0.0f, contentPadBottomY));
+  ImGui::EndChild();
+  ImGui::PopStyleColor();
+  ImGui::PopID();
+
+  ImGui::SetCursorScreenPos(origin);
+
   ImGui::Dummy(canvasSize);
 
   char moveText[96];
@@ -579,7 +725,7 @@ void Visualizer::RenderFibonacciGoldenRatio() {
     drawList->AddText(centerMsgPos, IM_COL32(170, 180, 200, 220), centerMsg);
 
     float lineH = ImGui::GetTextLineHeightWithSpacing();
-    float boxW = 220.0f;
+    float boxW = canvasSize.x * 0.30f - 24.0f;
     float boxH = 14.0f + (lineH * 7.0f) + 10.0f;
     ImVec2 boxMin(origin.x + canvasSize.x - boxW - 12.0f, origin.y + 12.0f);
     ImVec2 boxMax(boxMin.x + boxW, boxMin.y + boxH);
@@ -627,7 +773,7 @@ void Visualizer::RenderFibonacciGoldenRatio() {
     }
 
     float lineH = ImGui::GetTextLineHeightWithSpacing();
-    float boxW = 220.0f;
+    float boxW = canvasSize.x * 0.30f - 24.0f;
     float boxH = 14.0f + (lineH * 7.0f) + 10.0f;
     ImVec2 boxMin(origin.x + canvasSize.x - boxW - 12.0f, origin.y + 12.0f);
     ImVec2 boxMax(boxMin.x + boxW, boxMin.y + boxH);
@@ -834,7 +980,7 @@ void Visualizer::RenderFibonacciGoldenRatio() {
   }
   bool shouldFollowLatest = (activeExprIndex != m_FibonacciLastFollowedIndex);
 
-  float boxW = 220.0f;
+  float boxW = canvasSize.x * 0.30f - 24.0f;
   float lineH = ImGui::GetTextLineHeightWithSpacing();
   float boxH = 14.0f + (lineH * 7.0f) + 10.0f;
   ImVec2 boxMin(origin.x + canvasSize.x - boxW - 12.0f, origin.y + 12.0f);
