@@ -86,22 +86,19 @@ void Menu::Render() {
   ImGuiHelper::drawTabHorizontally("top_tabs",
                                    ImVec2(ImGui::GetContentRegionAvail().x, 45),
                                    modes, 3, m_SelectedMode, &disabledColor);
-
-  if (m_Visualizer) {
-    if (m_SelectedMode == 2 && m_SelectedRecursionSimulation == 0) {
-      m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
-    } else {
-      m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
-    }
-
-    if (m_SelectedMode == 2 && m_SelectedRecursionSimulation == 2 &&
-        m_Visualizer->HasTowerOfHanoiSimulation()) {
+  if (m_SelectedMode == 2 && m_Visualizer) {
+    if (m_SelectedRecursionSimulation == 2) {
       m_Visualizer->UpdateTowerOfHanoi(ImGui::GetIO().DeltaTime);
       m_Visualizer->RenderTowerOfHanoi();
+    } else if (m_SelectedRecursionSimulation == 1) {
+      m_Visualizer->RenderFibonacciGoldenRatio();
     } else {
       m_Visualizer->Update();
       m_Visualizer->Render();
     }
+  } else if (m_Visualizer) {
+    m_Visualizer->Update();
+    m_Visualizer->Render();
   }
   ImGui::EndChild();
 
@@ -393,6 +390,10 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
       m_SelectedRecursionSimulation = i;
       if (m_SelectedRecursionSimulation != 2 && m_Visualizer)
         m_Visualizer->ClearTowerOfHanoiSimulation();
+      if (m_SelectedRecursionSimulation != 2 && m_Visualizer)
+        m_Visualizer->ClearTowerTrace();
+      if (m_SelectedRecursionSimulation != 1 && m_Visualizer)
+        m_Visualizer->ClearFibonacciSimulation();
     }
 
     if (selected) {
@@ -414,8 +415,12 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
     if (m_Visualizer) {
       if (m_SelectedRecursionSimulation == 2) {
         m_Visualizer->SetTowerOfHanoiSimulation({}, m_RecursionN);
+        m_Visualizer->ClearTowerTrace();
+      } else if (m_SelectedRecursionSimulation == 1) {
+        m_Visualizer->ResetFibonacciSimulation();
       } else {
         m_Visualizer->ClearTowerOfHanoiSimulation();
+        m_Visualizer->ClearFibonacciSimulation();
       }
       m_Visualizer->Reset();
     }
@@ -552,14 +557,27 @@ void Menu::RunRecursionSimulation() {
     m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
     sim->Factorial(m_RecursionN);
     m_Visualizer->ClearTowerOfHanoiSimulation();
+    m_Visualizer->ClearFibonacciSimulation();
+  } else if (m_SelectedRecursionSimulation == 1) {
+    Recursion recursion;
+    std::vector<int> sequence;
+    sequence.reserve(static_cast<size_t>(m_RecursionN));
+    for (int i = 1; i <= m_RecursionN; ++i)
+      sequence.push_back(recursion.Fibonacci(i));
+    m_Visualizer->SetFibonacciSimulation(sequence);
+    m_Visualizer->ClearTowerOfHanoiSimulation();
+    m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
   } else if (m_SelectedRecursionSimulation == 2) {
     Recursion recursion;
     recursion.TowerOfHanoi(m_RecursionN, 'A', 'B', 'C');
     m_Visualizer->SetTowerOfHanoiSimulation(recursion.GetTowerMoves(),
                                             m_RecursionN);
+    m_Visualizer->SetTowerTrace(recursion.GetTowerTrace());
     m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
+    m_Visualizer->ClearFibonacciSimulation();
   } else {
     m_Visualizer->ClearTowerOfHanoiSimulation();
+    m_Visualizer->ClearFibonacciSimulation();
     m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
   }
 
@@ -567,7 +585,9 @@ void Menu::RunRecursionSimulation() {
     delete sim;
     m_HasRun = true;
     m_Visualizer->Play();
-  } else if (m_SelectedRecursionSimulation == 2) {
+  } else if (m_SelectedRecursionSimulation == 1 ||
+             m_SelectedRecursionSimulation == 2) {
     m_HasRun = true;
+    m_Visualizer->Play();
   }
 }
