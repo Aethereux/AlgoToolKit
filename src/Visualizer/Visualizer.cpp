@@ -243,6 +243,45 @@ void Visualizer::ClearTowerOfHanoiSimulation() {
   m_TowerMoves.clear();
 }
 
+void Visualizer::SetFibonacciSimulation(const std::vector<int> &sequence) {
+  m_FibonacciSequence = sequence;
+  m_ShowFibonacciIllustration = !m_FibonacciSequence.empty();
+  m_FibonacciAnimTime = 0.0f;
+  m_FibonacciPlaying = !m_FibonacciSequence.empty();
+  m_FibonacciPlayTimer = 0.0f;
+  m_FibonacciStepProgress = 0.0f;
+  m_FibonacciStep = 0;
+}
+
+void Visualizer::ResetFibonacciSimulation() {
+  m_FibonacciAnimTime = 0.0f;
+  m_FibonacciPlaying = false;
+  m_FibonacciPlayTimer = 0.0f;
+  m_FibonacciStepProgress = 0.0f;
+  m_FibonacciStep = 0;
+  m_ShowFibonacciIllustration = !m_FibonacciSequence.empty();
+}
+
+void Visualizer::ClearFibonacciSimulation() {
+  m_ShowFibonacciIllustration = false;
+  m_FibonacciSequence.clear();
+  m_FibonacciAnimTime = 0.0f;
+  m_FibonacciPlaying = false;
+  m_FibonacciPlayTimer = 0.0f;
+  m_FibonacciStepProgress = 0.0f;
+  m_FibonacciStep = 0;
+}
+
+void Visualizer::SetTowerTrace(const std::vector<std::string> &traceLines) {
+  m_TowerTrace = traceLines;
+  m_ShowTowerTrace = !m_TowerTrace.empty();
+}
+
+void Visualizer::ClearTowerTrace() {
+  m_TowerTrace.clear();
+  m_ShowTowerTrace = false;
+}
+
 void Visualizer::UpdateTowerOfHanoi(float dt) {
   if (!m_ShowTowerIllustration || !m_TowerPlaying)
     return;
@@ -379,6 +418,8 @@ void Visualizer::RenderTowerOfHanoi() {
   canvasSize.y -= 28.0f;
   if (canvasSize.y < 80.0f)
     canvasSize.y = 80.0f;
+  if (canvasSize.x < 100.0f)
+    canvasSize.x = 100.0f;
 
   ImVec2 origin = ImGui::GetCursorScreenPos();
   ImDrawList *drawList = ImGui::GetWindowDrawList();
@@ -498,6 +539,248 @@ void Visualizer::RenderTowerOfHanoi() {
   ImGui::SameLine(ImGui::GetContentRegionAvail().x - 110);
   float progress =
       maxStep > 0 ? static_cast<float>(m_TowerStep) / static_cast<float>(maxStep)
+                  : 0.0f;
+  ImGui::ProgressBar(progress, ImVec2(100, 0));
+}
+
+void Visualizer::RenderFibonacciGoldenRatio() {
+  if (!m_ShowFibonacciIllustration)
+    return;
+
+  float dt = ImGui::GetIO().DeltaTime;
+  m_FibonacciAnimTime += dt;
+
+  const int n = static_cast<int>(m_FibonacciSequence.size());
+  if (n < 2) {
+    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.75f, 1.0f),
+                       "Run Fibonacci simulation to view golden ratio illustration.");
+    return;
+  }
+
+  int maxStep = n - 1;
+  if (maxStep < 1)
+    maxStep = 1;
+
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 6));
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));
+
+  if (m_FibonacciPlaying) {
+    ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(200, 80, 60, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(220, 100, 80, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(180, 65, 50, 255));
+  } else {
+    ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(50, 180, 100, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(70, 200, 120, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(40, 160, 90, 255));
+  }
+
+  if (ImGui::Button(m_FibonacciPlaying ? ICON_FA_PAUSE "  Pause"
+                                       : ICON_FA_PLAY "  Play")) {
+    if (m_FibonacciStep >= maxStep)
+      m_FibonacciStep = 0;
+    m_FibonacciPlaying = !m_FibonacciPlaying;
+    m_FibonacciPlayTimer = 0.0f;
+    m_FibonacciStepProgress = 0.0f;
+  }
+  ImGui::PopStyleColor(3);
+
+  ImGui::SameLine();
+  if (ImGui::Button(ICON_FA_STEP_BACKWARD)) {
+    m_FibonacciPlaying = false;
+    m_FibonacciPlayTimer = 0.0f;
+    m_FibonacciStepProgress = 0.0f;
+    if (m_FibonacciStep > 0)
+      --m_FibonacciStep;
+  }
+
+  ImGui::SameLine();
+  if (ImGui::Button(ICON_FA_STEP_FORWARD)) {
+    m_FibonacciPlaying = false;
+    m_FibonacciPlayTimer = 0.0f;
+    m_FibonacciStepProgress = 0.0f;
+    if (m_FibonacciStep < maxStep)
+      ++m_FibonacciStep;
+  }
+
+  ImGui::SameLine();
+  ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.7f, 1.0f), "Step %d / %d",
+                     m_FibonacciStep, maxStep);
+  ImGui::PopStyleVar(3);
+
+  if (m_FibonacciPlaying) {
+    float stepInterval = 1.20f;
+    float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.0045f);
+    if (speedScale < 0.18f)
+      speedScale = 0.18f;
+    if (speedScale > 1.0f)
+      speedScale = 1.0f;
+    stepInterval *= speedScale;
+
+    m_FibonacciPlayTimer += dt;
+    m_FibonacciStepProgress = m_FibonacciPlayTimer / stepInterval;
+    if (m_FibonacciStepProgress >= 1.0f) {
+      m_FibonacciPlayTimer = 0.0f;
+      m_FibonacciStepProgress = 0.0f;
+      ++m_FibonacciStep;
+      if (m_FibonacciStep >= maxStep) {
+        m_FibonacciStep = maxStep;
+        m_FibonacciPlaying = false;
+      }
+    }
+  }
+
+  const float phi = 1.61803398875f;
+  float effectiveStep = static_cast<float>(m_FibonacciStep);
+  if (m_FibonacciPlaying)
+    effectiveStep += std::min(1.0f, m_FibonacciStepProgress);
+  if (effectiveStep > static_cast<float>(maxStep))
+    effectiveStep = static_cast<float>(maxStep);
+
+  int loStep = static_cast<int>(floorf(effectiveStep));
+
+  float reveal = static_cast<float>(maxStep > 0 ? effectiveStep / maxStep : 0.0f);
+  if (reveal < 0.0f)
+    reveal = 0.0f;
+  if (reveal > 1.0f)
+    reveal = 1.0f;
+
+  ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+  canvasSize.y -= 28.0f;
+  if (canvasSize.y < 80.0f)
+    canvasSize.y = 80.0f;
+  if (canvasSize.x < 100.0f)
+    canvasSize.x = 100.0f;
+
+  ImVec2 origin = ImGui::GetCursorScreenPos();
+  ImDrawList *drawList = ImGui::GetWindowDrawList();
+
+  if (m_Config.showGrid) {
+    constexpr int gridLines = 5;
+    for (int i = 0; i <= gridLines; ++i) {
+      float y = origin.y + (canvasSize.y / gridLines) * i;
+      drawList->AddLine(ImVec2(origin.x, y),
+                        ImVec2(origin.x + canvasSize.x, y),
+                        IM_COL32(255, 255, 255, 16), 1.0f);
+    }
+  }
+
+  ImVec2 center(origin.x + canvasSize.x * 0.5f, origin.y + canvasSize.y * 0.52f);
+  ImU32 spiralColor = GetThemeColor(StepType::Compare);
+
+  float thetaMax = static_cast<float>(n + 2) * (float)M_PI * 0.5f;
+  float rMax = powf(phi, thetaMax / ((float)M_PI * 0.5f));
+  float a = (std::min(canvasSize.x, canvasSize.y) * 0.42f) / std::max(1.0f, rMax);
+
+  const int samples = 360;
+  int visibleSamples = std::max(8, static_cast<int>(samples * reveal));
+  ImVec2 prev = center;
+  for (int i = 0; i <= visibleSamples; ++i) {
+    float t = static_cast<float>(i) / static_cast<float>(samples);
+    float theta = thetaMax * t;
+    float r = a * powf(phi, theta / ((float)M_PI * 0.5f));
+    ImVec2 p(center.x + r * cosf(theta), center.y + r * sinf(theta));
+    if (i > 0)
+      drawList->AddLine(prev, p, spiralColor, 2.0f);
+    prev = p;
+  }
+
+  float tracerT = reveal;
+  if (m_FibonacciPlaying && reveal >= 1.0f)
+    tracerT = fmodf(m_FibonacciAnimTime * 0.12f, 1.0f);
+  float tracerTheta = thetaMax * tracerT;
+  float tracerR = a * powf(phi, tracerTheta / ((float)M_PI * 0.5f));
+  ImVec2 tracer(center.x + tracerR * cosf(tracerTheta),
+                center.y + tracerR * sinf(tracerTheta));
+  float pulse = 0.8f + 0.2f * sinf(m_FibonacciAnimTime * 5.0f);
+  drawList->AddCircleFilled(tracer, 6.0f * pulse, GetThemeColor(StepType::Swap));
+  drawList->AddCircle(tracer, 10.0f * pulse, GetThemeColor(StepType::Compare), 0,
+                      2.0f);
+
+  std::vector<std::string> exprLines;
+  exprLines.reserve(m_FibonacciSequence.size() + 2);
+  exprLines.push_back("n == 0 = 0");
+  exprLines.push_back("n == 1 = 1");
+
+  std::vector<int> displaySequence;
+  displaySequence.reserve(m_FibonacciSequence.size() + 2);
+  displaySequence.push_back(0);
+  displaySequence.push_back(1);
+  for (int v : m_FibonacciSequence)
+    displaySequence.push_back(v);
+
+  for (size_t i = 2; i < displaySequence.size(); ++i) {
+    char expr[48];
+    snprintf(expr, sizeof(expr), "%d + %d", displaySequence[i - 2],
+             displaySequence[i - 1]);
+    exprLines.push_back(expr);
+  }
+
+  int visibleExprCount = 2;
+  if (exprLines.size() > 2) {
+    float exprReveal = reveal * static_cast<float>(exprLines.size() - 2);
+    visibleExprCount = 2 + static_cast<int>(floorf(exprReveal));
+    if (visibleExprCount > static_cast<int>(exprLines.size()))
+      visibleExprCount = static_cast<int>(exprLines.size());
+  }
+  int startExpr = 0;
+  int endExpr = visibleExprCount;
+
+    float boxW = 220.0f;
+  float lineH = ImGui::GetTextLineHeightWithSpacing();
+  float boxH = 14.0f + (lineH * 5.0f) + 10.0f;
+  ImVec2 boxMin(origin.x + canvasSize.x - boxW - 12.0f, origin.y + 12.0f);
+  ImVec2 boxMax(boxMin.x + boxW, boxMin.y + boxH);
+  drawList->AddRectFilled(boxMin, boxMax, IM_COL32(18, 22, 30, 210), 8.0f);
+  drawList->AddRect(boxMin, boxMax, IM_COL32(110, 125, 150, 170), 8.0f, 0, 1.5f);
+  drawList->AddText(ImVec2(boxMin.x + 10.0f, boxMin.y + 6.0f),
+                    IM_COL32(200, 215, 235, 230), "Fn build-up");
+
+  for (int i = startExpr; i < endExpr; ++i) {
+    float lineReveal = 1.0f;
+    if (i >= 2 && exprLines.size() > 2) {
+      float termIndex = static_cast<float>(i - 1);
+      float normalized = termIndex / static_cast<float>(exprLines.size() - 1);
+      lineReveal = reveal * static_cast<float>(exprLines.size() - 2) -
+                   static_cast<float>(i - 2);
+      if (lineReveal < 0.0f)
+        lineReveal = 0.0f;
+      if (lineReveal > 1.0f)
+        lineReveal = 1.0f;
+      (void)normalized;
+    }
+
+    float y = boxMin.y + 6.0f + lineH + static_cast<float>(i - startExpr) * lineH;
+    if (i >= 2 && lineReveal > 0.0f) {
+      drawList->AddRectFilled(ImVec2(boxMin.x + 8.0f, y - 1.5f),
+                              ImVec2(boxMax.x - 8.0f, y + lineH - 3.0f),
+                              IM_COL32(95, 140, 220,
+                                       static_cast<int>(70.0f * lineReveal)),
+                              5.0f);
+    }
+    ImU32 textColor = i < 2 ? IM_COL32(235, 240, 245, 245)
+                            : IM_COL32(185, 195, 210,
+                                       static_cast<int>(225.0f * lineReveal));
+    drawList->AddText(ImVec2(boxMin.x + 12.0f, y),
+                      textColor,
+                      exprLines[static_cast<size_t>(i)].c_str());
+  }
+
+  ImGui::Dummy(canvasSize);
+  char stepText[128];
+  if (m_FibonacciStep > 0) {
+    int num = std::min(n, m_FibonacciStep + 1);
+    int den = std::max(1, num - 1);
+    snprintf(stepText, sizeof(stepText), "Comparing ratio F(%d) / F(%d)", num,
+             den);
+  } else {
+    snprintf(stepText, sizeof(stepText), "Ready - press Play to step through ratios");
+  }
+
+  ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.6f, 1.0f), "%s", stepText);
+  ImGui::SameLine(ImGui::GetContentRegionAvail().x - 110);
+  float progress =
+      maxStep > 0 ? static_cast<float>(m_FibonacciStep) / static_cast<float>(maxStep)
                   : 0.0f;
   ImGui::ProgressBar(progress, ImVec2(100, 0));
 }

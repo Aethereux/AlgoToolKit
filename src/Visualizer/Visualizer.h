@@ -71,10 +71,18 @@ public:
 
   void SetTowerOfHanoiSimulation(const std::vector<std::pair<char, char>> &moves,
                                  int diskCount);
+  void SetTowerTrace(const std::vector<std::string> &traceLines);
+  void ClearTowerTrace();
   void ClearTowerOfHanoiSimulation();
   bool HasTowerOfHanoiSimulation() const { return m_ShowTowerIllustration; }
   void UpdateTowerOfHanoi(float dt);
   void RenderTowerOfHanoi();
+
+  void SetFibonacciSimulation(const std::vector<int> &sequence);
+  void ResetFibonacciSimulation();
+  void ClearFibonacciSimulation();
+  bool HasFibonacciSimulation() const { return m_ShowFibonacciIllustration; }
+  void RenderFibonacciGoldenRatio();
 
   bool IsPlaying() const { return m_IsPlaying; }
   int GetCurrentStepIndex() const { return m_CurrentStepIndex; }
@@ -136,6 +144,16 @@ private:
   int m_TowerStep = 0;
   int m_TowerDiskCount = 4;
   std::vector<std::pair<char, char>> m_TowerMoves;
+  std::vector<std::string> m_TowerTrace;
+  bool m_ShowTowerTrace = false;
+
+  bool m_ShowFibonacciIllustration = false;
+  std::vector<int> m_FibonacciSequence;
+  float m_FibonacciAnimTime = 0.0f;
+  bool m_FibonacciPlaying = false;
+  float m_FibonacciPlayTimer = 0.0f;
+  float m_FibonacciStepProgress = 0.0f;
+  int m_FibonacciStep = 0;
 
   VisualizerConfig m_Config;
   VisualizationMode m_VisualizationMode = VisualizationMode::BarGraph;

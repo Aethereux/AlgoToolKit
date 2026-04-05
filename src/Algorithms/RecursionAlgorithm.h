@@ -38,8 +38,11 @@ public:
     void TowerOfHanoi(int numDisks, char source, char auxiliary, char destination) override;
 
     const std::vector<std::pair<char, char>>& GetTowerMoves() const;
+    const std::vector<std::string>& GetTowerTrace() const;
 
 private:
     void TowerOfHanoiTracked(int numDisks, char source, char auxiliary, char destination);
+    void AddTowerTraceLine(const std::string& line);
     std::vector<std::pair<char, char>> m_TowerMoves;
+    std::vector<std::string> m_TowerTrace;
 };

@@ -67,20 +67,46 @@ int Recursion::Fibonacci(int n){
 
 void Recursion::TowerOfHanoi(int numDisks, char source, char auxiliary, char destination){
     m_TowerMoves.clear();
+    m_TowerTrace.clear();
+    AddTowerTraceLine("Base Case: n == 1");
     TowerOfHanoiTracked(numDisks, source, auxiliary, destination);
 }
 
 void Recursion::TowerOfHanoiTracked(int numDisks, char source, char auxiliary, char destination) {
+    AddTowerTraceLine("Call: TowerOfHanoi(" + std::to_string(numDisks) + ", " + source + ", " +
+                      auxiliary + ", " + destination + ")");
+
     if(numDisks <= 0){
+        AddTowerTraceLine("Return: TowerOfHanoi(" + std::to_string(numDisks) + ", " + source + ", " +
+                          auxiliary + ", " + destination + ")");
+        return;
+    }
+
+    if(numDisks == 1){
+        AddTowerTraceLine("Move: " + std::string(1, source) + " -> " + std::string(1, destination));
+        m_TowerMoves.push_back({source, destination});
+        AddTowerTraceLine("Return: TowerOfHanoi(1, " + std::string(1, source) + ", " +
+                          std::string(1, auxiliary) + ", " + std::string(1, destination) + ")");
         return;
     }
 
     TowerOfHanoiTracked(numDisks - 1, source, destination, auxiliary);
+    AddTowerTraceLine("Move: " + std::string(1, source) + " -> " + std::string(1, destination));
     m_TowerMoves.push_back({source, destination});
    
     TowerOfHanoiTracked(numDisks - 1, auxiliary, source, destination);
+    AddTowerTraceLine("Return: TowerOfHanoi(" + std::to_string(numDisks) + ", " + source + ", " +
+                      auxiliary + ", " + destination + ")");
 }
 
 const std::vector<std::pair<char, char>>& Recursion::GetTowerMoves() const {
     return m_TowerMoves;
+}
+
+const std::vector<std::string>& Recursion::GetTowerTrace() const {
+    return m_TowerTrace;
+}
+
+void Recursion::AddTowerTraceLine(const std::string& line) {
+    m_TowerTrace.push_back(line);
 }
