@@ -20,4 +20,16 @@ public:
     // TODO: Implement Tower of Hanoi tracking disk movements
     // Example Output: Move disk 1 from A to C
     virtual void TowerOfHanoi(int numDisks, char source, char auxiliary, char destination) = 0;
+protected:
+    Visualizer* m_Visualizer;
 };
+
+
+class Factorial : public RecursionAlgorithm {
+public:
+    using RecursionAlgorithm::RecursionAlgorithm;
+
+    int Factorial(int n) override;
+    int Fibonacci(int n) override { return 0; }
+    void TowerOfHanoi(int numDisks, char source, char auxiliary, char destination) override {}
+}

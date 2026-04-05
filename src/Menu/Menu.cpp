@@ -196,6 +196,8 @@ void Menu::RenderSortingTab(float sidebarWidth) {
   if (m_Visualizer) {
     auto &config = m_Visualizer->GetConfig();
 
+    config.vizType = VizType::BarGraph;
+
     ImGui::SetCursorPosX(16);
     ImGui::PushItemWidth(sidebarWidth - 80);
 
@@ -210,21 +212,11 @@ void Menu::RenderSortingTab(float sidebarWidth) {
       config.theme = static_cast<ColorTheme>(themeIdx);
     ImGui::SetCursorPosX(16);
 
-    const char *vizTypes[] = {"Bar Graph",    "Line Graph",     "Circular",
-                              "Scatter Plot", "Color Spectrum", "Starburst",
-                              "Pyramid"};
-    int vizIdx = static_cast<int>(config.vizType);
-    if (ImGui::Combo("Type##ty", &vizIdx, vizTypes, 7))
-      config.vizType = static_cast<VizType>(vizIdx);
-    ImGui::SetCursorPosX(16);
-
-    if (config.vizType == VizType::BarGraph) {
-      const char *styles[] = {"Rounded", "Sharp", "Gradient"};
-      int styleIdx = static_cast<int>(config.barStyle);
-      if (ImGui::Combo("Style##st", &styleIdx, styles, 3))
-        config.barStyle = static_cast<BarStyle>(styleIdx);
-      ImGui::SetCursorPosX(16);
-    }
+  const char *styles[] = {"Rounded", "Sharp", "Gradient"};
+        int styleIdx = static_cast<int>(config.barStyle);
+        if (ImGui::Combo("Style##st", &styleIdx, styles, 3))
+            config.barStyle = static_cast<BarStyle>(styleIdx);
+    
     ImGui::PopItemWidth();
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 4));
