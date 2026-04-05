@@ -154,6 +154,7 @@ private:
   float m_FibonacciPlayTimer = 0.0f;
   float m_FibonacciStepProgress = 0.0f;
   int m_FibonacciStep = 0;
+  int m_FibonacciLastFollowedIndex = -1;
 
   VisualizerConfig m_Config;
   VisualizationMode m_VisualizationMode = VisualizationMode::BarGraph;

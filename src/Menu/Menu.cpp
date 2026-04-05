@@ -77,7 +77,9 @@ void Menu::Render() {
 
   ImGui::SameLine();
 
-  ImGui::BeginChild("main", ImVec2(0, 0), false);
+  ImGui::BeginChild("main", ImVec2(0, 0), false,
+                    ImGuiWindowFlags_NoScrollbar |
+                        ImGuiWindowFlags_NoScrollWithMouse);
 
   // Custom Horizontal Mode Tabs at top of the Graph area
   const char *modes[] = {"Sorting Algorithms", "MST Algorithms",
