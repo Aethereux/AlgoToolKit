@@ -196,8 +196,6 @@ void Menu::RenderSortingTab(float sidebarWidth) {
   if (m_Visualizer) {
     auto &config = m_Visualizer->GetConfig();
 
-    config.vizType = VizType::BarGraph;
-
     ImGui::SetCursorPosX(16);
     ImGui::PushItemWidth(sidebarWidth - 80);
 
