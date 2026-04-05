@@ -50,7 +50,6 @@ set(APP_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Menu/Menu.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualizer/Visualizer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Algorithms/SortingAlgorithm.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Algorithms/RecursionAlgorithm.h
 )
 
 # Create the executable

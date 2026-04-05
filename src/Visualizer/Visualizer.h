@@ -9,7 +9,9 @@ enum class StepType { Compare, Swap, Overwrite, Sorted, Pivot, Merge, Default };
 
 enum class ColorTheme { Cyberpunk, Ocean, Sunset, Matrix, Pastel };
 
-enum class BarStyle { Rounded, Sharp, Gradient };
+enum class BarStyle { Rounded, Sharp, Gradient}; 
+
+enum class VisualizationMode { BarGraph, FactorialLadder };
 
 struct AlgorithmStep {
   std::vector<int> array;
@@ -83,6 +85,11 @@ public:
   VisualizerConfig &GetConfig() { return m_Config; }
   const VisualizerConfig &GetConfig() const { return m_Config; }
 
+  void SetVisualizationMode(VisualizationMode mode) {
+    m_VisualizationMode = mode;
+  }
+  VisualizationMode GetVisualizationMode() const { return m_VisualizationMode; }
+
 private:
   // UI panels
   void RenderControlPanel();
@@ -91,6 +98,8 @@ private:
   // Visualizations
   void RenderBarGraph(const std::vector<int> &arr, const ImVec2 &origin,
                       const ImVec2 &size);
+
+  void RenderLadder(const std::vector<int> &arr, const ImVec2 &origin, const ImVec2 &size); // New helper
 
   // Animation helpers
   void UpdateElementStates(float dt);
@@ -129,4 +138,5 @@ private:
   std::vector<std::pair<char, char>> m_TowerMoves;
 
   VisualizerConfig m_Config;
+  VisualizationMode m_VisualizationMode = VisualizationMode::BarGraph;
 };

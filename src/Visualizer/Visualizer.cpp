@@ -606,21 +606,39 @@ void Visualizer::Update() {
 }
 
 void Visualizer::Render() {
-    RenderControlPanel();
+  RenderControlPanel();
+
+  ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+  canvasSize.y -= 28.0f;
+  if (canvasSize.y < 50.0f)
+    canvasSize.y = 50.0f;
+  ImVec2 canvasPos = ImGui::GetCursorScreenPos();
+
+  if (m_VisualizationMode == VisualizationMode::FactorialLadder) {
+    static const std::vector<int> emptyArray;
+    bool hasFactorialSteps = false;
+    if (!m_Steps.empty()) {
+      const std::string &firstDesc = m_Steps.front().description;
+      hasFactorialSteps = (firstDesc.find("factorial") != std::string::npos) ||
+                          (firstDesc.find("Base case") != std::string::npos);
+    }
+
+    const std::vector<int> &ladderArray =
+        hasFactorialSteps
+            ? ((m_CurrentStepIndex < 0 && !m_Steps.empty()) ? m_Steps.front().array
+                                                             : GetCurrentArray())
+            : emptyArray;
+    RenderLadder(ladderArray, canvasPos, canvasSize);
+    ImGui::Dummy(canvasSize);
+  } else {
     const std::vector<int> &currentArray = GetCurrentArray();
     if (!currentArray.empty()) {
-        ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-        canvasSize.y -= 28.0f; 
-        if (canvasSize.y < 50.0f) canvasSize.y = 50.0f;
-
-        ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-
-        // Just call the Bar Graph directly
-        RenderBarGraph(currentArray, canvasPos, canvasSize);
-
-        ImGui::Dummy(canvasSize);
+      RenderBarGraph(currentArray, canvasPos, canvasSize);
+      ImGui::Dummy(canvasSize);
     }
-    RenderStepInfo();
+  }
+
+  RenderStepInfo();
 }
 
 void Visualizer::RenderControlPanel() {
@@ -782,5 +800,165 @@ void Visualizer::RenderBarGraph(const std::vector<int> &arr,
 
       dl->AddText(ImVec2(tx, ty), IM_COL32(220, 220, 230, 255), val.c_str());
     }
+  }
+}
+
+void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
+                              const ImVec2 &size) {
+  ImDrawList *dl = ImGui::GetWindowDrawList();
+
+  std::vector<int> displayArr = arr;
+  for (const auto &step : m_Steps) {
+    if (step.array.size() > displayArr.size())
+      displayArr = step.array;
+  }
+
+  ImVec2 panelMin = origin;
+  ImVec2 panelMax(origin.x + size.x, origin.y + size.y);
+  dl->AddRectFilled(panelMin, panelMax, IM_COL32(18, 18, 22, 215));
+
+  const float leftPad = 16.0f;
+  const float rightPad = 18.0f;
+  const float topPad = 16.0f;
+  const float split = 0.70f;
+
+  float leftW = size.x * split;
+
+  ImVec2 stackMin(panelMin.x + leftPad, panelMin.y + topPad);
+  ImVec2 stackMax(panelMin.x + leftW - rightPad, panelMax.y - topPad);
+  ImVec2 retMin(panelMin.x + leftW + 6.0f, panelMin.y + topPad);
+  ImVec2 retMax(panelMax.x - rightPad, panelMax.y - topPad);
+
+  dl->AddText(ImVec2(stackMin.x, stackMin.y - 2.0f), IM_COL32(214, 214, 222, 255),
+              "Factorial Ladder Graph");
+  dl->AddText(ImVec2(retMin.x, retMin.y - 2.0f), IM_COL32(214, 214, 222, 255),
+              "Return Values");
+
+  const float titleGap = 26.0f;
+  stackMin.y += titleGap;
+  retMin.y += titleGap;
+
+  int current = (m_CurrentStepIndex < 0) ? -1 : m_CurrentStepIndex;
+  const int activeDepth = static_cast<int>(arr.size());
+  const float stepAnim =
+      m_Config.smoothAnimation ? EaseOutCubic(std::min(1.0f, std::max(0.0f, m_AnimationProgress)))
+                               : 1.0f;
+  const bool animateRevealNow =
+      (current >= 0 && current < static_cast<int>(m_Steps.size()) &&
+       m_Steps[current].type == StepType::Pivot);
+
+  int revealedDepth = 0;
+  for (int i = 0; i <= current && i < static_cast<int>(m_Steps.size()); ++i) {
+    const int d = static_cast<int>(m_Steps[i].array.size());
+    if (d > revealedDepth)
+      revealedDepth = d;
+  }
+
+  const int depth = static_cast<int>(displayArr.size());
+  if (depth > 0) {
+    const float graphBottom = stackMax.y - 34.0f;
+    const float graphTop = stackMin.y + 24.0f;
+    const float usableHeight = std::max(80.0f, graphBottom - graphTop);
+    const float totalWidth = (stackMax.x - stackMin.x);
+    const float gap = std::max(8.0f, totalWidth * 0.014f);
+    const float barW = std::max(24.0f, (totalWidth - (depth - 1) * gap) / depth);
+    const int maxV =
+      std::max(1, *std::max_element(displayArr.begin(), displayArr.end()));
+
+    dl->AddLine(ImVec2(stackMin.x, graphBottom), ImVec2(stackMax.x, graphBottom),
+                IM_COL32(120, 120, 130, 210), 1.8f);
+
+    for (int i = 0; i < depth; ++i) {
+      if (i >= revealedDepth)
+        continue;
+
+      const int n = displayArr[i];
+      const float ratio = static_cast<float>(n) / static_cast<float>(maxV);
+      const float h = std::max(34.0f, usableHeight * ratio);
+
+      const float x1 = stackMin.x + i * (barW + gap);
+      const float x2 = std::min(x1 + barW, stackMax.x);
+      const float y2 = graphBottom;
+      const bool isActiveTop = (activeDepth > 0) ? (i == activeDepth - 1)
+                                                  : (i == depth - 1);
+      const bool isNewestRevealed = (i == revealedDepth - 1);
+        const float reveal =
+          (animateRevealNow && isNewestRevealed) ? stepAnim : 1.0f;
+      const float hAnimated = std::max(26.0f, h * reveal);
+      const float y1 = y2 - hAnimated;
+
+      const ImU32 topCol = isActiveTop ? IM_COL32(106, 178, 255, 255)
+                   : IM_COL32(80, 160, 255, 250);
+      const ImU32 botCol = isActiveTop ? IM_COL32(46, 104, 190, 255)
+                   : IM_COL32(34, 84, 160, 245);
+
+      dl->AddRectFilledMultiColor(ImVec2(x1, y1), ImVec2(x2, y2), topCol, topCol,
+                                  botCol, botCol);
+      dl->AddRect(ImVec2(x1, y1), ImVec2(x2, y2), IM_COL32(170, 210, 255, 230),
+                  5.0f, 0, 1.2f);
+
+      const int nextValue = (i + 1 < depth) ? displayArr[i + 1] : 1;
+      std::string topLabel = std::to_string(n) + " x " + std::to_string(nextValue) +
+                             " = " + std::to_string(n * nextValue);
+
+      ImVec2 topSize = ImGui::CalcTextSize(topLabel.c_str());
+      float tx = x1 + (x2 - x1 - topSize.x) * 0.5f;
+      float ty = y1 - topSize.y - 7.0f;
+      dl->AddRectFilled(ImVec2(tx - 5.0f, ty - 2.0f),
+            ImVec2(tx + topSize.x + 5.0f, ty + topSize.y + 2.0f),
+            IM_COL32(30, 30, 34, 220), 4.0f);
+      dl->AddText(ImVec2(tx, ty), IM_COL32(236, 236, 240, 255), topLabel.c_str());
+
+      std::string callLabel = "f(" + std::to_string(n) + ")";
+      ImVec2 callSize = ImGui::CalcTextSize(callLabel.c_str());
+      float cx = x1 + (x2 - x1 - callSize.x) * 0.5f;
+      dl->AddText(ImVec2(cx, y2 + 6.0f), IM_COL32(190, 190, 198, 255),
+                  callLabel.c_str());
+    }
+  } else {
+    dl->AddText(ImVec2(stackMin.x, stackMin.y + 8.0f), IM_COL32(150, 150, 170, 255),
+                "Run factorial to build the recursion ladder.");
+  }
+
+  dl->AddRectFilled(retMin, retMax, IM_COL32(24, 24, 28, 220), 6.0f);
+  dl->AddRect(retMin, retMax, IM_COL32(122, 122, 134, 220), 6.0f);
+
+  float lineY = retMin.y + 10.0f;
+  int returnCount = 0;
+
+  for (int i = 0; i <= current && i < static_cast<int>(m_Steps.size()); ++i) {
+    const AlgorithmStep &s = m_Steps[i];
+    if (s.type != StepType::Merge && s.type != StepType::Sorted)
+      continue;
+
+    std::string label;
+    if (s.type == StepType::Sorted) {
+      label = "base: factorial(" + std::to_string(s.index1) + ") = " +
+              std::to_string(s.index2);
+    } else {
+      label = "return: factorial(" + std::to_string(s.index1) + ") = " +
+              std::to_string(s.index2);
+    }
+
+    if (lineY + 18.0f > retMax.y)
+      break;
+    const bool isCurrentStep = (i == current);
+    if (s.type == StepType::Merge) {
+      int chipAlpha = isCurrentStep ? 230 : 200;
+      ImVec2 chipMin(retMin.x + 6.0f, lineY - 1.0f);
+      ImVec2 chipMax(retMax.x - 6.0f, lineY + 16.0f);
+      dl->AddRectFilled(chipMin, chipMax, IM_COL32(32, 45, 66, chipAlpha), 4.0f);
+    }
+    const int textAlpha = isCurrentStep ? 235 : 255;
+    dl->AddText(ImVec2(retMin.x + 10.0f, lineY), IM_COL32(230, 235, 244, textAlpha),
+                label.c_str());
+    lineY += 18.0f;
+    ++returnCount;
+  }
+
+  if (returnCount == 0) {
+    dl->AddText(ImVec2(retMin.x + 8.0f, retMin.y + 10.0f),
+                IM_COL32(150, 150, 170, 255),
+                "Return values will appear here");
   }
 }
