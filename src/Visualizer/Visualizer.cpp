@@ -255,9 +255,9 @@ void Visualizer::UpdateTowerOfHanoi(float dt) {
   }
 
   float stepInterval = 1.75f;
-  float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.002f);
-  if (speedScale < 0.65f)
-    speedScale = 0.65f;
+  float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.0045f);
+  if (speedScale < 0.18f)
+    speedScale = 0.18f;
   if (speedScale > 1.0f)
     speedScale = 1.0f;
   stepInterval *= speedScale;
@@ -436,9 +436,9 @@ void Visualizer::RenderTowerOfHanoi() {
     float destTop = destBottom - diskH;
 
     float moveDuration = 1.75f;
-    float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.002f);
-    if (speedScale < 0.65f)
-      speedScale = 0.65f;
+    float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.0045f);
+    if (speedScale < 0.18f)
+      speedScale = 0.18f;
     if (speedScale > 1.0f)
       speedScale = 1.0f;
     moveDuration *= speedScale;
