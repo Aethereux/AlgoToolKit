@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui.h"
+#include <array>
 
 class Visualizer;
 class SortingAlgorithm;
@@ -30,7 +31,7 @@ private:
     int m_SelectedSortingAlgorithm = 0;
     int m_SelectedRecursionSimulation = 0;
     int m_SelectedMode = 0;
-    int m_RecursionN = 5;
+    std::array<int, 3> m_RecursionNBySimulation = {5, 10, 4};
     bool m_HasRun = false;
     double m_LastExecutionTimeMs = 0.0;
     int m_LastOperationsCount = 0;

@@ -123,7 +123,6 @@ void Menu::Render() {
     if (m_SelectedMode == 2) {
       // Entering Recursion tab should always start on Factorial view.
       m_SelectedRecursionSimulation = 0;
-      m_RecursionN = GetRecursionDefaultForSimulation(0);
       m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
       m_Visualizer->Pause();
       m_Visualizer->ClearSteps();
@@ -522,7 +521,8 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
     if (ImGui::Selectable(simulations[i], selected, 0,
                           ImVec2(sidebarWidth - 28, 28))) {
       m_SelectedRecursionSimulation = i;
-      m_RecursionN = std::clamp(m_RecursionN, 1, GetRecursionMaxForSimulation(i));
+      m_RecursionNBySimulation[i] =
+          std::clamp(m_RecursionNBySimulation[i], 1, GetRecursionMaxForSimulation(i));
       if (m_Visualizer) {
         switch (i) {
         case 0:
@@ -558,7 +558,8 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
                         ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
   if (ImGui::Button(ICON_FA_UNDO " Reset", ImVec2(sidebarWidth - 28, 28))) {
-    m_RecursionN = GetRecursionDefaultForSimulation(m_SelectedRecursionSimulation);
+    m_RecursionNBySimulation[m_SelectedRecursionSimulation] =
+        GetRecursionDefaultForSimulation(m_SelectedRecursionSimulation);
     if (m_Visualizer) {
       if (m_SelectedRecursionSimulation == 2) {
         m_Visualizer->ClearTowerOfHanoiSimulation();
@@ -600,12 +601,13 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   if (m_Visualizer) {
     auto &config = m_Visualizer->GetConfig();
     const int recursionMax = GetRecursionMaxForSimulation(m_SelectedRecursionSimulation);
-    m_RecursionN = std::clamp(m_RecursionN, 1, recursionMax);
+    int &currentRecursionN = m_RecursionNBySimulation[m_SelectedRecursionSimulation];
+    currentRecursionN = std::clamp(currentRecursionN, 1, recursionMax);
 
     ImGui::SetCursorPosX(16);
     ImGui::PushItemWidth(sidebarWidth - 80);
 
-    ImGui::SliderInt("N value", &m_RecursionN, 1, recursionMax);
+    ImGui::SliderInt("N value", &currentRecursionN, 1, recursionMax);
     ImGui::Dummy(ImVec2(0, 4));
     ImGui::SetCursorPosX(16);
     ImGui::SliderInt("Speed##rec_sp", &config.animationSpeed, 1, 200);
@@ -742,7 +744,10 @@ void Menu::RunRecursionSimulation() {
   if (m_Visualizer->IsPlaying())
     return;
 
-  m_RecursionN = std::clamp(m_RecursionN, 1, GetRecursionMaxForSimulation(m_SelectedRecursionSimulation));
+  int &currentRecursionN = m_RecursionNBySimulation[m_SelectedRecursionSimulation];
+  currentRecursionN =
+      std::clamp(currentRecursionN, 1,
+                 GetRecursionMaxForSimulation(m_SelectedRecursionSimulation));
   m_Visualizer->Reset();
   m_Visualizer->ClearSteps();
 
@@ -752,7 +757,7 @@ void Menu::RunRecursionSimulation() {
   case 0: {
     sim = new FactorialAlgorithm(m_Visualizer);
     m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
-    sim->Factorial(m_RecursionN);
+    sim->Factorial(currentRecursionN);
     m_Visualizer->ClearTowerOfHanoiSimulation();
     m_Visualizer->ClearFibonacciSimulation();
     break;
@@ -760,8 +765,8 @@ void Menu::RunRecursionSimulation() {
   case 1: {
     Recursion recursion;
     std::vector<int> sequence;
-    sequence.reserve(static_cast<size_t>(m_RecursionN));
-    for (int i = 1; i <= m_RecursionN; ++i)
+    sequence.reserve(static_cast<size_t>(currentRecursionN));
+    for (int i = 1; i <= currentRecursionN; ++i)
       sequence.push_back(recursion.Fibonacci(i));
     m_Visualizer->SetFibonacciSimulation(sequence);
     m_Visualizer->ClearTowerOfHanoiSimulation();
@@ -770,9 +775,9 @@ void Menu::RunRecursionSimulation() {
   }
   case 2: {
     Recursion recursion;
-    recursion.TowerOfHanoi(m_RecursionN, 'A', 'B', 'C');
+    recursion.TowerOfHanoi(currentRecursionN, 'A', 'B', 'C');
     m_Visualizer->SetTowerOfHanoiSimulation(recursion.GetTowerMoves(),
-                                            m_RecursionN);
+                                            currentRecursionN);
     m_Visualizer->SetTowerTrace(recursion.GetTowerTrace());
     m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
     m_Visualizer->ClearFibonacciSimulation();
