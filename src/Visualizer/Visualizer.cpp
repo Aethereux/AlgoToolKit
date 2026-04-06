@@ -1654,6 +1654,13 @@ void Visualizer::UpdateKruskals(float dt) {
 }
 
 void Visualizer::RenderKruskals() {
+  auto FormatEdgePair = [](int a, int b) {
+    int lo = std::min(a, b) + 1;
+    int hi = std::max(a, b) + 1;
+    std::string label = "(" + std::to_string(lo) + "," + std::to_string(hi) + ")";
+    return label;
+  };
+
   // Component colour palette (8 distinct colours, cycling)
   static const ImU32 kCompColors[] = {
       IM_COL32(80,  160, 255, 255), // blue
@@ -1722,7 +1729,7 @@ void Visualizer::RenderKruskals() {
     ImVec2 sz = ImGui::GetContentRegionAvail();
     ImVec2 origin = ImGui::GetCursorScreenPos();
     ImDrawList *dl = ImGui::GetWindowDrawList();
-    const char *msg = "Click \"Run Kruskal's\" to visualize the algorithm";
+    const char *msg = "Click \"Run Graph Algorithm\" to visualize the algorithm";
     ImVec2 msz = ImGui::CalcTextSize(msg);
     dl->AddText(ImVec2(origin.x + (sz.x - msz.x) * 0.5f,
                        origin.y + (sz.y - msz.y) * 0.5f),
@@ -1732,6 +1739,7 @@ void Visualizer::RenderKruskals() {
   }
 
   const GraphStep &cur = m_GraphSteps[m_GraphStep];
+  const bool isPrim = (cur.algorithm == GraphAlgorithmType::Prim);
   int n = m_GraphVertexCount;
 
   ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -1880,80 +1888,138 @@ void Visualizer::RenderKruskals() {
                     ImGuiWindowFlags_NoScrollbar);
 
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
-  ImGui::Text(ICON_FA_LIST "  Sorted Edges");
+  if (isPrim)
+    ImGui::Text(ICON_FA_PROJECT_DIAGRAM "  Used Edges ");
+  else
+    ImGui::Text(ICON_FA_LIST "  Sorted Edges");
   ImGui::PopStyleColor();
   ImGui::Separator();
 
-  // Build sorted edge list (same sort order as the algorithm)
-  std::vector<Edge> sortedEdges = m_GraphEdges;
-  std::sort(sortedEdges.begin(), sortedEdges.end(),
-            [](const Edge &a, const Edge &b) { return a.weight < b.weight; });
+  auto GetEdgeWeight = [&](int u, int v) {
+    for (const auto &e : m_GraphEdges) {
+      if ((e.src == u && e.dest == v) || (e.src == v && e.dest == u))
+        return e.weight;
+    }
+    return 0;
+  };
+
+  std::vector<Edge> panelEdges;
+  if (isPrim) {
+    for (const auto &me : cur.mstEdges) {
+      Edge used;
+      used.src = me.first;
+      used.dest = me.second;
+      used.weight = GetEdgeWeight(me.first, me.second);
+      panelEdges.push_back(used);
+    }
+  } else {
+    panelEdges = m_GraphEdges;
+    std::sort(panelEdges.begin(), panelEdges.end(),
+              [](const Edge &a, const Edge &b) { return a.weight < b.weight; });
+  }
 
   ImGui::BeginChild("##edgeScroll", ImVec2(0, avail.y - 40.0f), false);
-  for (int ei = 0; ei < (int)sortedEdges.size(); ++ei) {
-    const Edge &e = sortedEdges[ei];
+  if (isPrim) {
+    for (int i = 0; i < static_cast<int>(panelEdges.size()); ++i) {
+      const Edge &e = panelEdges[i];
+      const bool isCurrentAccepted =
+          (cur.type == GraphStepType::Accept) &&
+          (((cur.u == e.src) && (cur.v == e.dest)) ||
+           ((cur.u == e.dest) && (cur.v == e.src)));
 
-    bool isCurEdge = (cur.u == e.src && cur.v == e.dest) ||
-                     (cur.u == e.dest && cur.v == e.src);
-    bool isInMST = false;
-    bool isRejected = false;
-
-    for (const auto &me : cur.mstEdges) {
-      if ((me.first == e.src && me.second == e.dest) ||
-          (me.first == e.dest && me.second == e.src)) {
-        isInMST = true;
-        break;
+      if (isCurrentAccepted) {
+        ImVec2 rmin = ImGui::GetCursorScreenPos();
+        ImVec2 rmax(rmin.x + edgeListW - 4,
+                    rmin.y + ImGui::GetTextLineHeightWithSpacing());
+        ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax,
+                                                  IM_COL32(60, 50, 20, 120), 3.0f);
       }
+
+      std::string rowbuf =
+          FormatEdgePair(e.src, e.dest) + "  w=" + std::to_string(e.weight);
+      ImVec4 textColor = isCurrentAccepted ? ImVec4(1.0f, 0.85f, 0.4f, 1.0f)
+                                           : ImVec4(0.7f, 0.70f, 0.8f, 1.0f);
+      ImGui::TextColored(textColor, "%s", rowbuf.c_str());
     }
-    if (!isInMST && !isCurEdge) {
-      for (int s = 0; s <= m_GraphStep; ++s) {
-        const GraphStep &gs = m_GraphSteps[s];
-        if (gs.type == GraphStepType::Reject &&
-            ((gs.u == e.src && gs.v == e.dest) ||
-             (gs.u == e.dest && gs.v == e.src))) {
-          isRejected = true;
+  } else {
+    for (int ei = 0; ei < (int)panelEdges.size(); ++ei) {
+      const Edge &e = panelEdges[ei];
+
+      bool isCurEdge = (cur.u == e.src && cur.v == e.dest) ||
+                       (cur.u == e.dest && cur.v == e.src);
+      bool isInMST = false;
+      bool isRejected = false;
+
+      for (const auto &me : cur.mstEdges) {
+        if ((me.first == e.src && me.second == e.dest) ||
+            (me.first == e.dest && me.second == e.src)) {
+          isInMST = true;
           break;
         }
       }
+
+      if (!isInMST && !isCurEdge) {
+        for (int s = 0; s <= m_GraphStep; ++s) {
+          const GraphStep &gs = m_GraphSteps[s];
+          if (gs.type == GraphStepType::Reject &&
+              ((gs.u == e.src && gs.v == e.dest) ||
+               (gs.u == e.dest && gs.v == e.src))) {
+            isRejected = true;
+            break;
+          }
+        }
+      }
+
+      // Row background for current edge
+      if (isCurEdge) {
+        ImVec2 rmin = ImGui::GetCursorScreenPos();
+        ImVec2 rmax(rmin.x + edgeListW - 4,
+                    rmin.y + ImGui::GetTextLineHeightWithSpacing());
+        ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax,
+                                                  IM_COL32(60, 50, 20, 120), 3.0f);
+      }
+
+      // Status icon
+      const char *icon;
+      ImVec4 iconColor;
+      if (isInMST) {
+        icon = ICON_FA_CHECK;
+        iconColor = ImVec4(0.3f, 0.9f, 0.55f, 1.0f);
+      } else if (isRejected) {
+        icon = ICON_FA_TIMES;
+        iconColor = ImVec4(0.9f, 0.35f, 0.35f, 1.0f);
+      } else if (isCurEdge) {
+        icon = ICON_FA_ARROW_RIGHT;
+        iconColor = ImVec4(1.0f, 0.75f, 0.2f, 1.0f);
+      } else {
+        icon = "  ";
+        iconColor = ImVec4(0.5f, 0.5f, 0.6f, 1.0f);
+      }
+
+      ImGui::TextColored(iconColor, "%s", icon);
+      ImGui::SameLine();
+
+      std::string rowbuf =
+          FormatEdgePair(e.src, e.dest) + "  w=" + std::to_string(e.weight);
+
+      ImVec4 textColor = isCurEdge  ? ImVec4(1.0f, 0.85f, 0.4f, 1.0f)
+                       : isInMST    ? ImVec4(0.4f, 0.95f, 0.6f, 1.0f)
+                       : isRejected ? ImVec4(0.6f, 0.35f, 0.35f, 0.8f)
+                                    : ImVec4(0.7f, 0.70f, 0.8f, 1.0f);
+      ImGui::TextColored(textColor, "%s", rowbuf.c_str());
     }
-
-    // Row background for current edge
-    if (isCurEdge) {
-      ImVec2 rmin = ImGui::GetCursorScreenPos();
-      ImVec2 rmax(rmin.x + edgeListW - 4, rmin.y + ImGui::GetTextLineHeightWithSpacing());
-      ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(60, 50, 20, 120), 3.0f);
-    }
-
-    // Status icon
-    const char *icon;
-    ImVec4 iconColor;
-    if (isInMST) {
-      icon = ICON_FA_CHECK;
-      iconColor = ImVec4(0.3f, 0.9f, 0.55f, 1.0f);
-    } else if (isRejected) {
-      icon = ICON_FA_TIMES;
-      iconColor = ImVec4(0.9f, 0.35f, 0.35f, 1.0f);
-    } else if (isCurEdge) {
-      icon = ICON_FA_ARROW_RIGHT;
-      iconColor = ImVec4(1.0f, 0.75f, 0.2f, 1.0f);
-    } else {
-      icon = "  ";
-      iconColor = ImVec4(0.5f, 0.5f, 0.6f, 1.0f);
-    }
-
-    ImGui::TextColored(iconColor, "%s", icon);
-    ImGui::SameLine();
-
-    char rowbuf[32];
-    snprintf(rowbuf, sizeof(rowbuf), "%d -- %d  w=%d",
-             e.src + 1, e.dest + 1, e.weight);
-
-    ImVec4 textColor = isCurEdge  ? ImVec4(1.0f, 0.85f, 0.4f, 1.0f)
-                     : isInMST    ? ImVec4(0.4f, 0.95f, 0.6f, 1.0f)
-                     : isRejected ? ImVec4(0.6f, 0.35f, 0.35f, 0.8f)
-                                  : ImVec4(0.7f, 0.70f, 0.8f, 1.0f);
-    ImGui::TextColored(textColor, "%s", rowbuf);
   }
+
+  if (panelEdges.empty()) {
+    ImGui::TextDisabled("%s", isPrim ? "No used edges yet." : "No edges.");
+  }
+
+  ImGui::Dummy(ImVec2(0, 6));
+  ImGui::Separator();
+  ImGui::Dummy(ImVec2(0, 2));
+  ImGui::TextColored(ImVec4(0.9f, 0.8f, 0.3f, 1.0f), "Weighted Time: %d",
+                     cur.mstCost);
+
   ImGui::EndChild(); // edgeScroll
   ImGui::EndChild(); // edgeList
 
