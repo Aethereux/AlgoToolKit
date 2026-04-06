@@ -1501,9 +1501,14 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
       }
       }
 
+      int runningValue = displayArr[0];
+      for (int j = 1; j <= i; ++j)
+        runningValue *= displayArr[j];
       const int nextValue = (i + 1 < depth) ? displayArr[i + 1] : 1;
-      std::string topLabel = std::to_string(n) + " x " + std::to_string(nextValue) +
-                             " = " + std::to_string(n * nextValue);
+      const int operationResult = runningValue * nextValue;
+      std::string topLabel = std::to_string(runningValue) + " x " +
+                             std::to_string(nextValue) + " = " +
+                             std::to_string(operationResult);
 
       ImVec2 topSize = ImGui::CalcTextSize(topLabel.c_str());
       float tx = x1 + (x2 - x1 - topSize.x) * 0.5f;
