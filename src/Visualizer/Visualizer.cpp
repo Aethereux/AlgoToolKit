@@ -1284,8 +1284,11 @@ void Visualizer::RenderStepInfo() {
     ImVec4 tc = ImGui::ColorConvertU32ToFloat4(typeColor);
     ImGui::TextColored(tc, "%s", step.description.c_str());
   } else {
-    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.6f, 1.0f),
-                       "Ready — run an algorithm, then press Play");
+    const char *idleText =
+        (m_VisualizationMode == VisualizationMode::FactorialLadder)
+            ? "Factorial Recursion"
+            : "Ready — run an algorithm, then press Play";
+    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.6f, 1.0f), "%s", idleText);
   }
 
   ImGui::SameLine(ImGui::GetContentRegionAvail().x - 110);

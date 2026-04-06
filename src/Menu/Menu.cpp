@@ -115,9 +115,28 @@ void Menu::Render() {
   const char *modes[] = {"Sorting Algorithms", "MST Algorithms",
                          "Recursion Simulation"};
   ImVec4 disabledColor = ImVec4(0.5f, 0.5f, 0.6f, 1.0f);
+  const int previousMode = m_SelectedMode;
   ImGuiHelper::drawTabHorizontally("top_tabs",
                                    ImVec2(ImGui::GetContentRegionAvail().x, 45),
                                    modes, 3, m_SelectedMode, &disabledColor);
+  if (m_Visualizer && previousMode != m_SelectedMode) {
+    if (m_SelectedMode == 2) {
+      // Entering Recursion tab should always start on Factorial view.
+      m_SelectedRecursionSimulation = 0;
+      m_RecursionN = GetRecursionDefaultForSimulation(0);
+      m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
+      m_Visualizer->Pause();
+      m_Visualizer->ClearSteps();
+      m_Visualizer->ClearTowerOfHanoiSimulation();
+      m_Visualizer->ClearTowerTrace();
+      m_Visualizer->ClearFibonacciSimulation();
+    } else {
+      m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
+      m_Visualizer->Pause();
+      m_Visualizer->ClearSteps();
+    }
+  }
+
   if (m_SelectedMode == 1 && m_Visualizer) {
     m_Visualizer->UpdateKruskals(ImGui::GetIO().DeltaTime);
     m_Visualizer->RenderKruskals();
@@ -504,6 +523,18 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
                           ImVec2(sidebarWidth - 28, 28))) {
       m_SelectedRecursionSimulation = i;
       m_RecursionN = std::clamp(m_RecursionN, 1, GetRecursionMaxForSimulation(i));
+      if (m_Visualizer) {
+        switch (i) {
+        case 0:
+          m_Visualizer->SetVisualizationMode(VisualizationMode::FactorialLadder);
+          break;
+        case 1:
+        case 2:
+        default:
+          m_Visualizer->SetVisualizationMode(VisualizationMode::BarGraph);
+          break;
+        }
+      }
       if (m_SelectedRecursionSimulation != 2 && m_Visualizer)
         m_Visualizer->ClearTowerOfHanoiSimulation();
       if (m_SelectedRecursionSimulation != 2 && m_Visualizer)
@@ -530,10 +561,10 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
     m_RecursionN = GetRecursionDefaultForSimulation(m_SelectedRecursionSimulation);
     if (m_Visualizer) {
       if (m_SelectedRecursionSimulation == 2) {
-        m_Visualizer->SetTowerOfHanoiSimulation({}, m_RecursionN);
+        m_Visualizer->ClearTowerOfHanoiSimulation();
         m_Visualizer->ClearTowerTrace();
       } else if (m_SelectedRecursionSimulation == 1) {
-        m_Visualizer->ResetFibonacciSimulation();
+        m_Visualizer->ClearFibonacciSimulation();
       } else {
         m_Visualizer->ClearTowerOfHanoiSimulation();
         m_Visualizer->ClearFibonacciSimulation();
