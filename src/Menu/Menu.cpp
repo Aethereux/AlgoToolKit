@@ -585,24 +585,6 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
     int themeIdx = static_cast<int>(config.theme);
     if (ImGui::Combo("Theme##rec_th", &themeIdx, themes, 5))
       config.theme = static_cast<ColorTheme>(themeIdx);
-
-    ImGui::PopItemWidth();
-
-    ImGui::Dummy(ImVec2(0, 6));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 6));
-    ImGui::SetCursorPosX(16);
-    ImGui::Checkbox("Smooth##rec_sm", &config.smoothAnimation);
-    ImGui::SameLine();
-    ImGui::Checkbox("Glow##rec_gl", &config.showGlow);
-    ImGui::SameLine();
-    ImGui::Checkbox("Values##rec_va", &config.showValues);
-
-    ImGui::Dummy(ImVec2(0, 4));
-    ImGui::SetCursorPosX(16);
-    ImGui::Checkbox("Grid##rec_gr", &config.showGrid);
-    ImGui::SameLine();
-    ImGui::Checkbox("Highlight##rec_hi", &config.highlightOps);
-    ImGui::PopStyleVar();
   }
 }
 
