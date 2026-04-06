@@ -515,6 +515,10 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
                         ImVec4(0.30f, 0.35f, 0.55f, 0.9f));
 
   const char *simulations[] = {"Factorial", "Fibonacci", "Tower of Hanoi"};
+  const char *simulationHints[] = {
+      "Multiply n down to one",
+      "Sum of two previous numbers",
+      "Stack smaller disks on larger"};
   for (int i = 0; i < 3; i++) {
     ImGui::SetCursorPosX(12);
     bool selected = (m_SelectedRecursionSimulation == i);
@@ -546,6 +550,7 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
     if (selected) {
       ImGui::SetCursorPosX(36);
       ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 0.8f));
+      ImGui::TextWrapped("%s", simulationHints[i]);
       ImGui::PopStyleColor();
     }
   }
