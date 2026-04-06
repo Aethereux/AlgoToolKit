@@ -10,7 +10,7 @@ void PrimGraph::SetGraphInfo(int numVertices, const std::vector<Edge> &edges) {
 void PrimGraph::SimulatePrims() {
   m_Steps.clear();
 
-  // Todo: Implement Prim's algorithm simulation with step recording similar to Kruskal's
+  // Todo: Implement Prim's algorithm
 }
 
 void KruskalGraph::SetGraphInfo(int numVertices, const std::vector<Edge> &edges) {
