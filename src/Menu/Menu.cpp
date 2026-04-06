@@ -1,10 +1,40 @@
 #include "Menu.h"
+#include "../Algorithms/GraphAlgorithm.h"
 #include "../Algorithms/RecursionAlgorithm.h"
 #include "../Algorithms/SortingAlgorithm.h"
 #include "../Resources/FontAwesome.h"
 #include "../Visualizer/Visualizer.h"
 #include "ImGuiHelper.h"
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <random>
+
+static int GetRecursionMaxForSimulation(int simulationIndex) {
+  switch (simulationIndex) {
+  case 0:
+    return 12; // 13! overflows 32-bit int
+  case 1:
+    return 20; // naive recursive fibonacci gets expensive quickly
+  case 2:
+    return 10; // Tower of Hanoi grows as 2^n - 1 moves
+  default:
+    return 20;
+  }
+}
+
+static int GetRecursionDefaultForSimulation(int simulationIndex) {
+  switch (simulationIndex) {
+  case 0:
+    return 5;
+  case 1:
+    return 10;
+  case 2:
+    return 4;
+  default:
+    return 5;
+  }
+}
 
 Menu::Menu() { m_Visualizer = new Visualizer(); }
 
@@ -88,7 +118,10 @@ void Menu::Render() {
   ImGuiHelper::drawTabHorizontally("top_tabs",
                                    ImVec2(ImGui::GetContentRegionAvail().x, 45),
                                    modes, 3, m_SelectedMode, &disabledColor);
-  if (m_SelectedMode == 2 && m_Visualizer) {
+  if (m_SelectedMode == 1 && m_Visualizer) {
+    m_Visualizer->UpdateKruskals(ImGui::GetIO().DeltaTime);
+    m_Visualizer->RenderKruskals();
+  } else if (m_SelectedMode == 2 && m_Visualizer) {
     if (m_SelectedRecursionSimulation == 2) {
       m_Visualizer->UpdateTowerOfHanoi(ImGui::GetIO().DeltaTime);
       m_Visualizer->RenderTowerOfHanoi();
@@ -323,45 +356,126 @@ void Menu::RenderSortingTab(float sidebarWidth) {
 void Menu::RenderGraphTab(float sidebarWidth) {
   ImGui::Dummy(ImVec2(0, 4));
   ImGui::SetCursorPosX(16);
-  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.5f, 0.2f, 1.0f));
-  ImGui::TextWrapped(ICON_FA_EXCLAMATION_TRIANGLE
-                     " MST Algorithms Not Yet Implemented");
-  ImGui::PopStyleColor();
-  ImGui::Dummy(ImVec2(0, 8));
-
-  ImGui::SetCursorPosX(16);
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
   ImGui::Text(ICON_FA_PROJECT_DIAGRAM "  ALGORITHMS");
   ImGui::PopStyleColor();
+  ImGui::Dummy(ImVec2(0, 2));
 
-  ImGui::SetCursorPosX(24);
-  ImGui::TextDisabled("Kruskal's Algorithm");
-  ImGui::SetCursorPosX(24);
-  ImGui::TextDisabled("Prim's Algorithm");
+  ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.20f, 0.25f, 0.40f, 0.6f));
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.25f, 0.30f, 0.50f, 0.7f));
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.30f, 0.35f, 0.55f, 0.9f));
 
+  // Kruskal's — selectable
+  ImGui::SetCursorPosX(12);
+  if (ImGui::Selectable(ICON_FA_SITEMAP "  Kruskal's Algorithm",
+                        m_SelectedGraphAlgorithm == 0, 0,
+                        ImVec2(sidebarWidth - 28, 28))) {
+    m_SelectedGraphAlgorithm = 0;
+    m_GraphHasRun = false;
+  }
+  if (m_SelectedGraphAlgorithm == 0) {
+    ImGui::SetCursorPosX(36);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 0.8f));
+    ImGui::TextWrapped("Sort edges, add if no cycle");
+    ImGui::PopStyleColor();
+  }
+
+  // Prim's
+  ImGui::SetCursorPosX(12);
+  if (ImGui::Selectable(ICON_FA_CODE_BRANCH "  Prim's Algorithm",
+                        m_SelectedGraphAlgorithm == 1, 0,
+                        ImVec2(sidebarWidth - 28, 28))) {
+    m_SelectedGraphAlgorithm = 1;
+    m_GraphHasRun = false;
+  }
+  if (m_SelectedGraphAlgorithm == 1) {
+    ImGui::SetCursorPosX(36);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 0.8f));
+    ImGui::TextWrapped("Grow MST from a starting vertex");
+    ImGui::PopStyleColor();
+  }
+
+  ImGui::PopStyleColor(3);
+
+  // Generate + Run button
+  ImGui::Dummy(ImVec2(0, 8));
+  ImGui::SetCursorPosX(14);
+
+  float halfBtn = (sidebarWidth - 28 - ImGui::GetStyle().ItemSpacing.x) / 2.0f;
+  ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.20f, 0.25f, 0.35f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
+  if (ImGui::Button(ICON_FA_SYNC " Generate", ImVec2(halfBtn, 28))) {
+    RunGraphSimulation();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button(ICON_FA_UNDO " Reset", ImVec2(halfBtn, 28))) {
+    if (m_Visualizer) m_Visualizer->ClearGraphSimulation();
+    m_GraphHasRun = false;
+  }
+  ImGui::PopStyleColor(2);
+
+  ImGui::Dummy(ImVec2(0, 4));
+  ImGui::SetCursorPosX(14);
+  ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.15f, 0.45f, 0.85f, 0.9f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.55f, 0.95f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.10f, 0.35f, 0.75f, 1.0f));
+  const char *runLabel = (m_SelectedGraphAlgorithm == 1)
+                             ? ICON_FA_PLAY_CIRCLE " Run Prim's"
+                             : ICON_FA_PLAY_CIRCLE " Run Kruskal's";
+  if (ImGui::Button(runLabel, ImVec2(sidebarWidth - 28, 36))) {
+    RunGraphSimulation();
+  }
+  ImGui::PopStyleColor(3);
+
+  // Settings
   ImGui::Dummy(ImVec2(0, 8));
   ImGui::Separator();
   ImGui::Dummy(ImVec2(0, 4));
-
   ImGui::SetCursorPosX(16);
   ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
-  ImGui::Text(ICON_FA_COG "  GRAPH INPUT");
+  ImGui::Text(ICON_FA_COG "  SETTINGS");
   ImGui::PopStyleColor();
+  ImGui::Dummy(ImVec2(0, 4));
 
   ImGui::SetCursorPosX(16);
-  static int numVertices = 5;
   ImGui::PushItemWidth(sidebarWidth - 80);
-  ImGui::SliderInt("Vertices", &numVertices, 3, 20);
+  ImGui::SliderInt("Vertices##gv", &m_GraphVertices, 3, 10);
+  ImGui::Dummy(ImVec2(0, 4));
+  ImGui::SetCursorPosX(16);
+  if (m_Visualizer)
+    ImGui::SliderInt("Speed##gs", &m_Visualizer->GetConfig().animationSpeed, 1, 200);
   ImGui::PopItemWidth();
 
-  ImGui::SetCursorPosX(16);
-  ImGui::TextDisabled("Edge Generation Setup");
+  // Complexity info
+  if (m_GraphHasRun) {
+    ImGui::Dummy(ImVec2(0, 8));
+    ImGui::Separator();
+    ImGui::Dummy(ImVec2(0, 4));
+    ImGui::SetCursorPosX(16);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
+    ImGui::Text(ICON_FA_INFO_CIRCLE "  COMPLEXITY");
+    ImGui::PopStyleColor();
+    ImGui::Dummy(ImVec2(0, 4));
 
-  ImGui::Dummy(ImVec2(0, 16));
-  ImGui::SetCursorPosX(12);
-  ImGui::BeginDisabled(true);
-  ImGui::Button("Run Graph Algorithm", ImVec2(sidebarWidth - 28, 36));
-  ImGui::EndDisabled();
+    auto InfoRow = [](const char *icon, const char *label, const char *value) {
+      ImGui::SetCursorPosX(20);
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 1.0f));
+      ImGui::Text("%s %s:", icon, label);
+      ImGui::PopStyleColor();
+      ImGui::SameLine(160);
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.8f, 0.3f, 1.0f));
+      ImGui::Text("%s", value);
+      ImGui::PopStyleColor();
+    };
+
+    if (m_SelectedGraphAlgorithm == 1) {
+      InfoRow(ICON_FA_CLOCK,  "Time",  "O(E log V)");
+      InfoRow(ICON_FA_MEMORY, "Space", "O(V + E)");
+    } else {
+      InfoRow(ICON_FA_CLOCK,  "Time",  "O(E log E)");
+      InfoRow(ICON_FA_MEMORY, "Space", "O(V + E)");
+    }
+  }
 }
 
 void Menu::RenderRecursionTab(float sidebarWidth) {
@@ -389,6 +503,7 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
     if (ImGui::Selectable(simulations[i], selected, 0,
                           ImVec2(sidebarWidth - 28, 28))) {
       m_SelectedRecursionSimulation = i;
+      m_RecursionN = std::clamp(m_RecursionN, 1, GetRecursionMaxForSimulation(i));
       if (m_SelectedRecursionSimulation != 2 && m_Visualizer)
         m_Visualizer->ClearTowerOfHanoiSimulation();
       if (m_SelectedRecursionSimulation != 2 && m_Visualizer)
@@ -412,7 +527,7 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
                         ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
   if (ImGui::Button(ICON_FA_UNDO " Reset", ImVec2(sidebarWidth - 28, 28))) {
-    m_RecursionN = 4;
+    m_RecursionN = GetRecursionDefaultForSimulation(m_SelectedRecursionSimulation);
     if (m_Visualizer) {
       if (m_SelectedRecursionSimulation == 2) {
         m_Visualizer->SetTowerOfHanoiSimulation({}, m_RecursionN);
@@ -453,11 +568,13 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
 
   if (m_Visualizer) {
     auto &config = m_Visualizer->GetConfig();
+    const int recursionMax = GetRecursionMaxForSimulation(m_SelectedRecursionSimulation);
+    m_RecursionN = std::clamp(m_RecursionN, 1, recursionMax);
 
     ImGui::SetCursorPosX(16);
     ImGui::PushItemWidth(sidebarWidth - 80);
 
-    ImGui::SliderInt("N value", &m_RecursionN, 1, 10);
+    ImGui::SliderInt("N value", &m_RecursionN, 1, recursionMax);
     ImGui::Dummy(ImVec2(0, 4));
     ImGui::SetCursorPosX(16);
     ImGui::SliderInt("Speed##rec_sp", &config.animationSpeed, 1, 200);
@@ -535,6 +652,71 @@ void Menu::RunSelectedAlgorithm() {
   m_Visualizer->Play();
 }
 
+void Menu::RunGraphSimulation() {
+  if (!m_Visualizer) return;
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> weightDis(1, 20);
+  std::uniform_int_distribution<> chanceDis(0, 99);
+
+  int n = m_GraphVertices;
+
+  // Match the same grid layout used by the renderer
+  int cols = (int)ceilf(sqrtf((float)n));
+
+  std::vector<Edge> edges;
+
+  auto addEdge = [&](int u, int v) {
+    // Skip duplicates
+    for (const auto &e : edges)
+      if ((e.src == u && e.dest == v) || (e.src == v && e.dest == u))
+        return;
+    edges.push_back({u, v, weightDis(gen)});
+  };
+
+  // Horizontal neighbours (same row, adjacent columns) — always added
+  for (int i = 0; i < n; i++) {
+    int col = i % cols;
+    if (col + 1 < cols && i + 1 < n)
+      addEdge(i, i + 1);
+  }
+
+  // Vertical neighbours (same column, next row) — always added
+  for (int i = 0; i < n; i++) {
+    if (i + cols < n)
+      addEdge(i, i + cols);
+  }
+
+  // Diagonal neighbours — added ~60% of the time to create cycles without
+  // introducing long crossing edges
+  for (int i = 0; i < n; i++) {
+    int col = i % cols;
+    // Down-right diagonal
+    if (col + 1 < cols && i + cols + 1 < n && chanceDis(gen) < 60)
+      addEdge(i, i + cols + 1);
+    // Down-left diagonal
+    if (col - 1 >= 0 && i + cols - 1 < n && chanceDis(gen) < 60)
+      addEdge(i, i + cols - 1);
+  }
+
+  if (m_SelectedGraphAlgorithm == 1) {
+    // Prim's
+    PrimGraph pg;
+    pg.SetGraphInfo(n, edges);
+    pg.SimulatePrims();
+    m_Visualizer->SetGraphSimulation(n, edges, pg.GetSteps());
+  } else {
+    // Kruskal's
+    KruskalGraph kg;
+    kg.SetGraphInfo(n, edges);
+    kg.SimulateKruskals();
+    m_Visualizer->SetGraphSimulation(n, edges, kg.GetSteps());
+  }
+
+  m_GraphHasRun = true;
+}
+
 void Menu::Shutdown() {
   delete m_Visualizer;
   m_Visualizer = nullptr;
@@ -547,6 +729,7 @@ void Menu::RunRecursionSimulation() {
   if (m_Visualizer->IsPlaying())
     return;
 
+  m_RecursionN = std::clamp(m_RecursionN, 1, GetRecursionMaxForSimulation(m_SelectedRecursionSimulation));
   m_Visualizer->Reset();
   m_Visualizer->ClearSteps();
 

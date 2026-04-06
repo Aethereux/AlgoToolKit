@@ -43,6 +43,7 @@ set(APP_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualizer/Visualizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Algorithms/SortingAlgorithm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Algorithms/RecursionAlgorithm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Algorithms/GraphAlgorithm.cpp
 )
 
 # Headers

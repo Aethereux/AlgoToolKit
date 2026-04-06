@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Algorithms/GraphAlgorithm.h"
 #include "imgui.h"
 #include <string>
 #include <utility>
@@ -9,7 +10,7 @@ enum class StepType { Compare, Swap, Overwrite, Sorted, Pivot, Merge, Default };
 
 enum class ColorTheme { Cyberpunk, Ocean, Sunset, Matrix, Pastel };
 
-enum class BarStyle { Rounded, Sharp, Gradient}; 
+enum class BarStyle { Rounded, Sharp, Gradient};
 
 enum class VisualizationMode { BarGraph, FactorialLadder };
 
@@ -84,6 +85,14 @@ public:
   bool HasFibonacciSimulation() const { return m_ShowFibonacciIllustration; }
   void RenderFibonacciGoldenRatio();
 
+  // Kruskal's / Graph simulation
+  void SetGraphSimulation(int vertexCount, const std::vector<Edge> &edges,
+                          const std::vector<GraphStep> &steps);
+  void ClearGraphSimulation();
+  bool HasGraphSimulation() const { return m_ShowGraphSimulation; }
+  void UpdateKruskals(float dt);
+  void RenderKruskals();
+
   bool IsPlaying() const { return m_IsPlaying; }
   int GetCurrentStepIndex() const { return m_CurrentStepIndex; }
   int GetTotalSteps() const { return static_cast<int>(m_Steps.size()); }
@@ -107,7 +116,7 @@ private:
   void RenderBarGraph(const std::vector<int> &arr, const ImVec2 &origin,
                       const ImVec2 &size);
 
-  void RenderLadder(const std::vector<int> &arr, const ImVec2 &origin, const ImVec2 &size); // New helper
+  void RenderLadder(const std::vector<int> &arr, const ImVec2 &origin, const ImVec2 &size);
 
   // Animation helpers
   void UpdateElementStates(float dt);
@@ -155,6 +164,15 @@ private:
   float m_FibonacciStepProgress = 0.0f;
   int m_FibonacciStep = 0;
   int m_FibonacciLastFollowedIndex = -1;
+
+  // Graph / Kruskal simulation
+  bool m_ShowGraphSimulation = false;
+  bool m_GraphPlaying = false;
+  float m_GraphPlayTimer = 0.0f;
+  int m_GraphStep = 0;
+  int m_GraphVertexCount = 0;
+  std::vector<Edge> m_GraphEdges;
+  std::vector<GraphStep> m_GraphSteps;
 
   VisualizerConfig m_Config;
   VisualizationMode m_VisualizationMode = VisualizationMode::BarGraph;

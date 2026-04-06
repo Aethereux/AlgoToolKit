@@ -901,21 +901,40 @@ void Visualizer::RenderFibonacciGoldenRatio() {
     }
   }
 
-  ImVec2 center(origin.x + canvasSize.x * 0.5f, origin.y + canvasSize.y * 0.52f);
+  const float sidePanelReserve = canvasSize.x * 0.32f;
+  const float spiralAreaWidth = std::max(120.0f, canvasSize.x - sidePanelReserve);
+  ImVec2 center(origin.x + spiralAreaWidth * 0.5f, origin.y + canvasSize.y * 0.52f);
   ImU32 spiralColor = GetThemeColor(StepType::Compare);
 
   float thetaMax = static_cast<float>(n + 2) * (float)M_PI * 0.5f;
   float rMax = powf(phi, thetaMax / ((float)M_PI * 0.5f));
-  float a = (std::min(canvasSize.x, canvasSize.y) * 0.42f) / std::max(1.0f, rMax);
+  float a = (std::min(spiralAreaWidth, canvasSize.y) * 0.42f) /
+            std::max(1.0f, rMax);
 
-  const int samples = 360;
-  int visibleSamples = std::max(8, static_cast<int>(samples * reveal));
+  float visibleTheta = thetaMax * reveal;
+  float visibleR = a * powf(phi, visibleTheta / ((float)M_PI * 0.5f));
+  float targetViewportRadius = std::min(spiralAreaWidth, canvasSize.y) * 0.40f;
+  float minVisibleR = std::max(1.0f, a * 0.16f);
+  float zoomScale = targetViewportRadius / std::max(minVisibleR, visibleR);
+  if (zoomScale < 1.0f)
+    zoomScale = 1.0f;
+  if (zoomScale > 14.0f)
+    zoomScale = 14.0f;
+
+  auto SpiralPoint = [&](float theta) {
+    float r = a * powf(phi, theta / ((float)M_PI * 0.5f));
+    float localX = r * cosf(theta) * zoomScale;
+    float localY = r * sinf(theta) * zoomScale;
+    return ImVec2(center.x + localX, center.y + localY);
+  };
+
+  const int samples = 720;
+  int visibleSamples = std::max(32, static_cast<int>(samples * reveal));
   ImVec2 prev = center;
   for (int i = 0; i <= visibleSamples; ++i) {
     float t = static_cast<float>(i) / static_cast<float>(samples);
     float theta = thetaMax * t;
-    float r = a * powf(phi, theta / ((float)M_PI * 0.5f));
-    ImVec2 p(center.x + r * cosf(theta), center.y + r * sinf(theta));
+    ImVec2 p = SpiralPoint(theta);
     if (i > 0)
       drawList->AddLine(prev, p, spiralColor, 2.0f);
     prev = p;
@@ -925,9 +944,7 @@ void Visualizer::RenderFibonacciGoldenRatio() {
   if (m_FibonacciPlaying && reveal >= 1.0f)
     tracerT = fmodf(m_FibonacciAnimTime * 0.12f, 1.0f);
   float tracerTheta = thetaMax * tracerT;
-  float tracerR = a * powf(phi, tracerTheta / ((float)M_PI * 0.5f));
-  ImVec2 tracer(center.x + tracerR * cosf(tracerTheta),
-                center.y + tracerR * sinf(tracerTheta));
+  ImVec2 tracer = SpiralPoint(tracerTheta);
   float pulse = 0.8f + 0.2f * sinf(m_FibonacciAnimTime * 5.0f);
   drawList->AddCircleFilled(tracer, 6.0f * pulse, GetThemeColor(StepType::Swap));
   drawList->AddCircle(tracer, 10.0f * pulse, GetThemeColor(StepType::Compare), 0,
@@ -1578,4 +1595,378 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
                 IM_COL32(150, 150, 170, 255),
                 "Return values will appear here");
   }
+}
+
+// ---------------------------------------------------------------------------
+// Graph / Kruskal simulation
+// ---------------------------------------------------------------------------
+
+void Visualizer::SetGraphSimulation(int vertexCount,
+                                    const std::vector<Edge> &edges,
+                                    const std::vector<GraphStep> &steps) {
+  m_GraphVertexCount = vertexCount;
+  m_GraphEdges = edges;
+  m_GraphSteps = steps;
+  m_GraphStep = 0;
+  m_GraphPlayTimer = 0.0f;
+  m_GraphPlaying = !steps.empty();
+  m_ShowGraphSimulation = true;
+}
+
+void Visualizer::ClearGraphSimulation() {
+  m_ShowGraphSimulation = false;
+  m_GraphPlaying = false;
+  m_GraphPlayTimer = 0.0f;
+  m_GraphStep = 0;
+  m_GraphVertexCount = 0;
+  m_GraphEdges.clear();
+  m_GraphSteps.clear();
+}
+
+void Visualizer::UpdateKruskals(float dt) {
+  if (!m_ShowGraphSimulation || !m_GraphPlaying)
+    return;
+
+  int maxStep = static_cast<int>(m_GraphSteps.size());
+  if (m_GraphStep >= maxStep) {
+    m_GraphPlaying = false;
+    return;
+  }
+
+  float stepInterval = 1.20f;
+  float speedScale = 1.0f - (static_cast<float>(m_Config.animationSpeed) * 0.0045f);
+  if (speedScale < 0.18f) speedScale = 0.18f;
+  if (speedScale > 1.0f)  speedScale = 1.0f;
+  stepInterval *= speedScale;
+
+  m_GraphPlayTimer += dt;
+  if (m_GraphPlayTimer >= stepInterval) {
+    m_GraphPlayTimer = 0.0f;
+    ++m_GraphStep;
+    if (m_GraphStep >= maxStep) {
+      m_GraphStep = maxStep - 1;
+      m_GraphPlaying = false;
+    }
+  }
+}
+
+void Visualizer::RenderKruskals() {
+  // Component colour palette (8 distinct colours, cycling)
+  static const ImU32 kCompColors[] = {
+      IM_COL32(80,  160, 255, 255), // blue
+      IM_COL32(255, 200,  50, 255), // gold
+      IM_COL32(80,  220, 130, 255), // green
+      IM_COL32(255, 100, 100, 255), // red
+      IM_COL32(180, 100, 255, 255), // purple
+      IM_COL32(255, 160,  80, 255), // orange
+      IM_COL32(80,  220, 220, 255), // cyan
+      IM_COL32(255, 150, 200, 255), // pink
+  };
+  static const int kNumColors = 8;
+
+  // ── Control row (Play / Step / counter) ────────────────────────────────
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 6));
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));
+
+  if (m_ShowGraphSimulation) {
+    int maxStep = static_cast<int>(m_GraphSteps.size());
+
+    // Play / Pause
+    if (m_GraphPlaying) {
+      ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(200,  80,  60, 255));
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(220, 100,  80, 255));
+      ImGui::PushStyleColor(ImGuiCol_ButtonActive,  IM_COL32(180,  65,  50, 255));
+    } else {
+      ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32( 50, 180, 100, 255));
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32( 70, 200, 120, 255));
+      ImGui::PushStyleColor(ImGuiCol_ButtonActive,  IM_COL32( 40, 160,  90, 255));
+    }
+    if (ImGui::Button(m_GraphPlaying ? ICON_FA_PAUSE "  Pause"
+                                     : ICON_FA_PLAY  "  Play")) {
+      if (m_GraphStep >= maxStep - 1) m_GraphStep = 0;
+      m_GraphPlaying = !m_GraphPlaying;
+      m_GraphPlayTimer = 0.0f;
+    }
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(70, 70, 90, 255));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(90, 90,120, 255));
+    if (ImGui::Button(ICON_FA_STEP_BACKWARD)) {
+      m_GraphPlaying = false;
+      m_GraphPlayTimer = 0.0f;
+      if (m_GraphStep > 0) --m_GraphStep;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_STEP_FORWARD)) {
+      m_GraphPlaying = false;
+      m_GraphPlayTimer = 0.0f;
+      if (m_GraphStep < maxStep - 1) ++m_GraphStep;
+    }
+    ImGui::PopStyleColor(2);
+
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.7f, 1.0f), "Step %d / %d",
+                       m_GraphStep + 1, maxStep);
+  }
+
+  ImGui::PopStyleVar(3);
+  ImGui::Dummy(ImVec2(0, 6.0f));
+
+  // ── Canvas area ──────────────────────────────────────────────────────────
+  if (!m_ShowGraphSimulation) {
+    ImVec2 sz = ImGui::GetContentRegionAvail();
+    ImVec2 origin = ImGui::GetCursorScreenPos();
+    ImDrawList *dl = ImGui::GetWindowDrawList();
+    const char *msg = "Click \"Run Kruskal's\" to visualize the algorithm";
+    ImVec2 msz = ImGui::CalcTextSize(msg);
+    dl->AddText(ImVec2(origin.x + (sz.x - msz.x) * 0.5f,
+                       origin.y + (sz.y - msz.y) * 0.5f),
+                IM_COL32(170, 180, 200, 200), msg);
+    ImGui::Dummy(sz);
+    return;
+  }
+
+  const GraphStep &cur = m_GraphSteps[m_GraphStep];
+  int n = m_GraphVertexCount;
+
+  ImVec2 avail = ImGui::GetContentRegionAvail();
+  avail.y -= 28.0f; // leave room for the bottom status line
+  if (avail.y < 80.0f) avail.y = 80.0f;
+
+  float edgeListW = avail.x * 0.30f;
+  float graphW    = avail.x - edgeListW - 8.0f;
+
+  // ── Left: graph canvas ───────────────────────────────────────────────────
+  ImVec2 graphOrigin = ImGui::GetCursorScreenPos();
+  ImDrawList *dl = ImGui::GetWindowDrawList();
+
+  // Clipping rect so drawing stays in the graph area
+  dl->PushClipRect(graphOrigin,
+                   ImVec2(graphOrigin.x + graphW, graphOrigin.y + avail.y), true);
+
+  // Background
+  dl->AddRectFilled(graphOrigin,
+                    ImVec2(graphOrigin.x + graphW, graphOrigin.y + avail.y),
+                    IM_COL32(14, 17, 24, 255), 8.0f);
+  dl->AddRect(graphOrigin,
+              ImVec2(graphOrigin.x + graphW, graphOrigin.y + avail.y),
+              IM_COL32(50, 55, 70, 180), 8.0f, 0, 1.0f);
+
+  // Node positions — grid layout to minimize edge crossings
+  // Nodes arranged in rows: ceil(sqrt(n)) columns, enough rows to fit all
+  int cols = (int)ceilf(sqrtf((float)n));
+  int rows = (n + cols - 1) / cols;
+
+  float marginX = graphW  * 0.12f;
+  float marginY = avail.y * 0.12f;
+  float cellW = (graphW  - 2.0f * marginX) / std::max(cols - 1, 1);
+  float cellH = (avail.y - 2.0f * marginY) / std::max(rows - 1, 1);
+  if (cols == 1) cellW = 0.0f;
+  if (rows == 1) cellH = 0.0f;
+
+  std::vector<ImVec2> nodePos(n);
+  for (int i = 0; i < n; ++i) {
+    int row = i / cols;
+    int col = i % cols;
+    // Centre the last (possibly incomplete) row
+    int nodesInRow = (row == rows - 1 && n % cols != 0) ? n % cols : cols;
+    float rowOffsetX = (cols - nodesInRow) * cellW * 0.5f;
+    nodePos[i] = ImVec2(
+        graphOrigin.x + marginX + rowOffsetX + col * cellW,
+        graphOrigin.y + marginY + row * cellH);
+  }
+
+  // Draw edges
+  for (const auto &e : m_GraphEdges) {
+    ImVec2 p0 = nodePos[e.src];
+    ImVec2 p1 = nodePos[e.dest];
+
+    // Determine edge state at current step
+    bool isCurEdge  = (cur.u == e.src && cur.v == e.dest) ||
+                      (cur.u == e.dest && cur.v == e.src);
+    bool isInMST    = false;
+    bool isRejected = false;
+
+    for (const auto &me : cur.mstEdges) {
+      if ((me.first == e.src && me.second == e.dest) ||
+          (me.first == e.dest && me.second == e.src)) {
+        isInMST = true;
+        break;
+      }
+    }
+
+    // Check if this edge was rejected in any prior step
+    if (!isInMST && !isCurEdge) {
+      for (int s = 0; s <= m_GraphStep; ++s) {
+        const GraphStep &gs = m_GraphSteps[s];
+        if (gs.type == GraphStepType::Reject &&
+            ((gs.u == e.src && gs.v == e.dest) ||
+             (gs.u == e.dest && gs.v == e.src))) {
+          isRejected = true;
+          break;
+        }
+      }
+    }
+
+    ImU32  color;
+    float  thickness;
+    if (isCurEdge && cur.type == GraphStepType::Consider) {
+      float pulse = 0.7f + 0.3f * sinf(m_GlobalTime * 6.0f);
+      int alpha = (int)(pulse * 255);
+      color = IM_COL32(255, 190, 50, alpha);
+      thickness = 3.5f;
+    } else if (isCurEdge && cur.type == GraphStepType::Accept) {
+      color = IM_COL32(80, 230, 150, 255);
+      thickness = 3.5f;
+    } else if (isCurEdge && cur.type == GraphStepType::Reject) {
+      color = IM_COL32(220, 70, 70, 255);
+      thickness = 2.5f;
+    } else if (isInMST) {
+      color = IM_COL32(80, 220, 150, 220);
+      thickness = 2.5f;
+    } else if (isRejected) {
+      color = IM_COL32(160, 60, 60, 140);
+      thickness = 1.0f;
+    } else {
+      color = IM_COL32(90, 95, 110, 200);
+      thickness = 1.2f;
+    }
+
+    dl->AddLine(p0, p1, color, thickness);
+
+    // Weight label at midpoint
+    ImVec2 mid((p0.x + p1.x) * 0.5f, (p0.y + p1.y) * 0.5f);
+    char wbuf[8];
+    snprintf(wbuf, sizeof(wbuf), "%d", e.weight);
+    ImVec2 tsz = ImGui::CalcTextSize(wbuf);
+    // Small background pill
+    dl->AddRectFilled(ImVec2(mid.x - tsz.x * 0.5f - 3, mid.y - tsz.y * 0.5f - 1),
+                      ImVec2(mid.x + tsz.x * 0.5f + 3, mid.y + tsz.y * 0.5f + 1),
+                      IM_COL32(14, 17, 24, 200), 3.0f);
+    dl->AddText(ImVec2(mid.x - tsz.x * 0.5f, mid.y - tsz.y * 0.5f),
+                isCurEdge ? IM_COL32(255, 230, 100, 255) : IM_COL32(180, 185, 200, 220),
+                wbuf);
+  }
+
+  // Draw nodes
+  float nodeR = 11.0f;
+  for (int i = 0; i < n; ++i) {
+    int compIdx = (i < (int)cur.componentId.size()) ? cur.componentId[i] : i;
+    ImU32 nodeColor = kCompColors[compIdx % kNumColors];
+
+    dl->AddCircleFilled(nodePos[i], nodeR, IM_COL32(14, 17, 24, 255));
+    dl->AddCircleFilled(nodePos[i], nodeR - 2.0f, nodeColor);
+
+    // Node label
+    char nbuf[4];
+    snprintf(nbuf, sizeof(nbuf), "%d", i + 1);
+    ImVec2 nsz = ImGui::CalcTextSize(nbuf);
+    dl->AddText(ImVec2(nodePos[i].x - nsz.x * 0.5f, nodePos[i].y - nsz.y * 0.5f),
+                IM_COL32(10, 10, 15, 255), nbuf);
+  }
+
+  dl->PopClipRect();
+
+  // Advance cursor past the graph area
+  ImGui::SetCursorScreenPos(ImVec2(graphOrigin.x + graphW + 8.0f, graphOrigin.y));
+
+  // ── Right: sorted edge list ───────────────────────────────────────────────
+  ImGui::BeginChild("##edgeList", ImVec2(edgeListW, avail.y), false,
+                    ImGuiWindowFlags_NoScrollbar);
+
+  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
+  ImGui::Text(ICON_FA_LIST "  Sorted Edges");
+  ImGui::PopStyleColor();
+  ImGui::Separator();
+
+  // Build sorted edge list (same sort order as the algorithm)
+  std::vector<Edge> sortedEdges = m_GraphEdges;
+  std::sort(sortedEdges.begin(), sortedEdges.end(),
+            [](const Edge &a, const Edge &b) { return a.weight < b.weight; });
+
+  ImGui::BeginChild("##edgeScroll", ImVec2(0, avail.y - 40.0f), false);
+  for (int ei = 0; ei < (int)sortedEdges.size(); ++ei) {
+    const Edge &e = sortedEdges[ei];
+
+    bool isCurEdge = (cur.u == e.src && cur.v == e.dest) ||
+                     (cur.u == e.dest && cur.v == e.src);
+    bool isInMST = false;
+    bool isRejected = false;
+
+    for (const auto &me : cur.mstEdges) {
+      if ((me.first == e.src && me.second == e.dest) ||
+          (me.first == e.dest && me.second == e.src)) {
+        isInMST = true;
+        break;
+      }
+    }
+    if (!isInMST && !isCurEdge) {
+      for (int s = 0; s <= m_GraphStep; ++s) {
+        const GraphStep &gs = m_GraphSteps[s];
+        if (gs.type == GraphStepType::Reject &&
+            ((gs.u == e.src && gs.v == e.dest) ||
+             (gs.u == e.dest && gs.v == e.src))) {
+          isRejected = true;
+          break;
+        }
+      }
+    }
+
+    // Row background for current edge
+    if (isCurEdge) {
+      ImVec2 rmin = ImGui::GetCursorScreenPos();
+      ImVec2 rmax(rmin.x + edgeListW - 4, rmin.y + ImGui::GetTextLineHeightWithSpacing());
+      ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(60, 50, 20, 120), 3.0f);
+    }
+
+    // Status icon
+    const char *icon;
+    ImVec4 iconColor;
+    if (isInMST) {
+      icon = ICON_FA_CHECK;
+      iconColor = ImVec4(0.3f, 0.9f, 0.55f, 1.0f);
+    } else if (isRejected) {
+      icon = ICON_FA_TIMES;
+      iconColor = ImVec4(0.9f, 0.35f, 0.35f, 1.0f);
+    } else if (isCurEdge) {
+      icon = ICON_FA_ARROW_RIGHT;
+      iconColor = ImVec4(1.0f, 0.75f, 0.2f, 1.0f);
+    } else {
+      icon = "  ";
+      iconColor = ImVec4(0.5f, 0.5f, 0.6f, 1.0f);
+    }
+
+    ImGui::TextColored(iconColor, "%s", icon);
+    ImGui::SameLine();
+
+    char rowbuf[32];
+    snprintf(rowbuf, sizeof(rowbuf), "%d -- %d  w=%d",
+             e.src + 1, e.dest + 1, e.weight);
+
+    ImVec4 textColor = isCurEdge  ? ImVec4(1.0f, 0.85f, 0.4f, 1.0f)
+                     : isInMST    ? ImVec4(0.4f, 0.95f, 0.6f, 1.0f)
+                     : isRejected ? ImVec4(0.6f, 0.35f, 0.35f, 0.8f)
+                                  : ImVec4(0.7f, 0.70f, 0.8f, 1.0f);
+    ImGui::TextColored(textColor, "%s", rowbuf);
+  }
+  ImGui::EndChild(); // edgeScroll
+  ImGui::EndChild(); // edgeList
+
+  // ── Bottom status line ────────────────────────────────────────────────────
+  ImGui::SetCursorScreenPos(ImVec2(graphOrigin.x, graphOrigin.y + avail.y + 4.0f));
+
+  ImVec4 descColor = cur.type == GraphStepType::Accept  ? ImVec4(0.3f, 0.9f, 0.55f, 1.0f)
+                   : cur.type == GraphStepType::Reject   ? ImVec4(0.9f, 0.4f, 0.4f,  1.0f)
+                   : cur.type == GraphStepType::Done     ? ImVec4(0.9f, 0.8f, 0.3f,  1.0f)
+                                                         : ImVec4(1.0f, 0.75f, 0.2f, 1.0f);
+  ImGui::TextColored(descColor, "%s", cur.description.c_str());
+
+  // Progress bar on the right
+  float progress = m_GraphSteps.empty() ? 0.0f
+      : static_cast<float>(m_GraphStep + 1) / static_cast<float>(m_GraphSteps.size());
+  ImGui::SameLine(ImGui::GetContentRegionAvail().x - 110.0f +
+                  ImGui::GetCursorPosX());
+  ImGui::ProgressBar(progress, ImVec2(100, 0));
 }
