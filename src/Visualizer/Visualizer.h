@@ -8,8 +8,6 @@
 
 enum class StepType { Compare, Swap, Overwrite, Sorted, Pivot, Merge, Default };
 
-enum class ColorTheme { Cyberpunk, Ocean, Sunset, Matrix, Pastel };
-
 enum class BarStyle { Rounded, Sharp, Gradient};
 
 enum class VisualizationMode { BarGraph, FactorialLadder };
@@ -42,13 +40,11 @@ struct VisualizerConfig {
   int arraySize = 30;
   int animationSpeed = 50;
   bool smoothAnimation = true;
-  ColorTheme theme = ColorTheme::Cyberpunk;
   BarStyle barStyle = BarStyle::Rounded;
   bool showValues = false;
   bool showGrid = true;
   bool highlightOps = true;
   bool showGlow = true;
-  float barSpacing = 2.0f;
 };
 
 class Visualizer {
@@ -96,6 +92,7 @@ public:
   bool IsPlaying() const { return m_IsPlaying; }
   int GetCurrentStepIndex() const { return m_CurrentStepIndex; }
   int GetTotalSteps() const { return static_cast<int>(m_Steps.size()); }
+  int GetStepCountOfType(StepType type) const;
   const std::vector<int> &GetOriginalArray() const;
   const std::vector<int> &GetCurrentArray() const;
 
@@ -131,8 +128,6 @@ private:
 
   // Easing
   static float EaseOutCubic(float t);
-  static float EaseOutElastic(float t);
-  static float EaseOutBounce(float t);
   static float EaseInOutQuad(float t);
 
   // State

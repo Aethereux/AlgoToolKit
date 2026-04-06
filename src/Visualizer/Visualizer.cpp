@@ -13,31 +13,6 @@ float Visualizer::EaseOutCubic(float t) {
   return 1.0f - t * t * t;
 }
 
-float Visualizer::EaseOutElastic(float t) {
-  if (t <= 0.0f)
-    return 0.0f;
-  if (t >= 1.0f)
-    return 1.0f;
-  return sinf(-13.0f * (float)M_PI * 0.5f * (t + 1.0f)) *
-             powf(2.0f, -10.0f * t) +
-         1.0f;
-}
-
-float Visualizer::EaseOutBounce(float t) {
-  if (t < 1.0f / 2.75f) {
-    return 7.5625f * t * t;
-  } else if (t < 2.0f / 2.75f) {
-    t -= 1.5f / 2.75f;
-    return 7.5625f * t * t + 0.75f;
-  } else if (t < 2.5f / 2.75f) {
-    t -= 2.25f / 2.75f;
-    return 7.5625f * t * t + 0.9375f;
-  } else {
-    t -= 2.625f / 2.75f;
-    return 7.5625f * t * t + 0.984375f;
-  }
-}
-
 float Visualizer::EaseInOutQuad(float t) {
   return t < 0.5f ? 2.0f * t * t : 1.0f - powf(-2.0f * t + 2.0f, 2.0f) / 2.0f;
 }
@@ -55,79 +30,19 @@ ImVec4 Visualizer::GetThemeColorVec(StepType type) const {
     return ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
   };
 
-  switch (m_Config.theme) {
-  case ColorTheme::Cyberpunk:
-    switch (type) {
-    case StepType::Compare:
-      return c(255, 215, 0);
-    case StepType::Swap:
-    case StepType::Overwrite:
-      return c(255, 60, 100);
-    case StepType::Sorted:
-      return c(0, 255, 170);
-    case StepType::Pivot:
-      return c(190, 80, 255);
-    default:
-      return c(80, 160, 255);
-    }
-  case ColorTheme::Ocean:
-    switch (type) {
-    case StepType::Compare:
-      return c(255, 180, 50);
-    case StepType::Swap:
-    case StepType::Overwrite:
-      return c(0, 200, 180);
-    case StepType::Sorted:
-      return c(33, 150, 243);
-    case StepType::Pivot:
-      return c(156, 39, 176);
-    default:
-      return c(0, 210, 240);
-    }
-  case ColorTheme::Sunset:
-    switch (type) {
-    case StepType::Compare:
-      return c(255, 210, 60);
-    case StepType::Swap:
-    case StepType::Overwrite:
-      return c(255, 87, 34);
-    case StepType::Sorted:
-      return c(255, 60, 120);
-    case StepType::Pivot:
-      return c(180, 50, 200);
-    default:
-      return c(255, 160, 40);
-    }
-  case ColorTheme::Matrix:
-    switch (type) {
-    case StepType::Compare:
-      return c(0, 255, 0);
-    case StepType::Swap:
-    case StepType::Overwrite:
-      return c(255, 255, 255);
-    case StepType::Sorted:
-      return c(0, 200, 0);
-    case StepType::Pivot:
-      return c(0, 255, 255);
-    default:
-      return c(0, 120, 0);
-    }
-  case ColorTheme::Pastel:
-    switch (type) {
-    case StepType::Compare:
-      return c(255, 223, 186);
-    case StepType::Swap:
-    case StepType::Overwrite:
-      return c(255, 179, 186);
-    case StepType::Sorted:
-      return c(186, 255, 201);
-    case StepType::Pivot:
-      return c(224, 187, 228);
-    default:
-      return c(186, 225, 255);
-    }
+  switch (type) {
+  case StepType::Compare:
+    return c(255, 215, 0);
+  case StepType::Swap:
+  case StepType::Overwrite:
+    return c(255, 60, 100);
+  case StepType::Sorted:
+    return c(0, 255, 170);
+  case StepType::Pivot:
+    return c(190, 80, 255);
+  default:
+    return c(80, 160, 255);
   }
-  return ImVec4(0.4f, 0.6f, 1.0f, 1.0f);
 }
 
 ImU32 Visualizer::GetThemeColor(StepType type) const {
@@ -1424,6 +1339,15 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
   stackMin.y += titleGap;
   retMin.y += titleGap;
 
+  // Match the same box height as the "Calls and Returns" panel in Fibonacci
+  // and Tower of Hanoi: 14 + (lineH * 7) + 10
+  {
+    float lineH = ImGui::GetTextLineHeightWithSpacing();
+    float boxH  = 14.0f + (lineH * 7.0f) + 10.0f;
+    retMax.y    = retMin.y + boxH;
+    retMax.x    = panelMax.x - rightPad;
+  }
+
   int current = (m_CurrentStepIndex < 0) ? -1 : m_CurrentStepIndex;
   const int activeDepth = static_cast<int>(arr.size());
   const float stepAnim =
@@ -1557,47 +1481,70 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
                 "Run factorial to build the recursion ladder.");
   }
 
-  dl->AddRectFilled(retMin, retMax, IM_COL32(24, 24, 28, 220), 6.0f);
-  dl->AddRect(retMin, retMax, IM_COL32(122, 122, 134, 220), 6.0f);
+  dl->AddRectFilled(retMin, retMax, IM_COL32(18, 22, 30, 210), 8.0f);
+  dl->AddRect(retMin, retMax, IM_COL32(110, 125, 150, 170), 8.0f, 0, 1.5f);
 
-  float lineY = retMin.y + 10.0f;
-  int returnCount = 0;
+  // Scrollable child inside the box
+  const float pad = 6.0f;
+  ImGui::SetCursorScreenPos(ImVec2(retMin.x + pad, retMin.y + pad));
+  ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0, 0, 0, 0));
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 2.0f));
+  float childW = retMax.x - retMin.x - pad * 2.0f;
+  float childH = retMax.y - retMin.y - pad * 2.0f;
 
-  for (int i = 0; i <= current && i < static_cast<int>(m_Steps.size()); ++i) {
-    const AlgorithmStep &s = m_Steps[i];
-    if (s.type != StepType::Merge && s.type != StepType::Sorted)
-      continue;
+  bool anyContent = false;
+  if (ImGui::BeginChild("##ret_scroll", ImVec2(childW, childH), false,
+                        ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+    for (int i = 0; i <= current && i < static_cast<int>(m_Steps.size()); ++i) {
+      const AlgorithmStep &s = m_Steps[i];
+      if (s.type != StepType::Merge && s.type != StepType::Sorted)
+        continue;
 
-    std::string label;
-    if (s.type == StepType::Sorted) {
-      label = "base: factorial(" + std::to_string(s.index1) + ") = " +
-              std::to_string(s.index2);
-    } else {
-      label = "return: factorial(" + std::to_string(s.index1) + ") = " +
-              std::to_string(s.index2);
+      anyContent = true;
+      std::string label;
+      if (s.type == StepType::Sorted) {
+        label = "base: factorial(" + std::to_string(s.index1) + ") = " +
+                std::to_string(s.index2);
+      } else {
+        label = "return: factorial(" + std::to_string(s.index1) + ") = " +
+                std::to_string(s.index2);
+      }
+
+      const bool isCurrentStep = (i == current);
+      float alpha = isCurrentStep ? 0.92f : 1.0f;
+      if (s.type == StepType::Merge) {
+        ImGui::PushStyleColor(ImGuiCol_Text,
+                              ImVec4(230/255.f, 235/255.f, 244/255.f, alpha));
+      } else {
+        ImGui::PushStyleColor(ImGuiCol_Text,
+                              ImVec4(180/255.f, 220/255.f, 180/255.f, alpha));
+      }
+      ImGui::TextUnformatted(label.c_str());
+      ImGui::PopStyleColor();
     }
 
-    if (lineY + 18.0f > retMax.y)
-      break;
-    const bool isCurrentStep = (i == current);
-    if (s.type == StepType::Merge) {
-      int chipAlpha = isCurrentStep ? 230 : 200;
-      ImVec2 chipMin(retMin.x + 6.0f, lineY - 1.0f);
-      ImVec2 chipMax(retMax.x - 6.0f, lineY + 16.0f);
-      dl->AddRectFilled(chipMin, chipMax, IM_COL32(32, 45, 66, chipAlpha), 4.0f);
+    if (!anyContent) {
+      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(150/255.f, 150/255.f, 170/255.f, 1.0f));
+      ImGui::TextUnformatted("Return values will appear here");
+      ImGui::PopStyleColor();
     }
-    const int textAlpha = isCurrentStep ? 235 : 255;
-    dl->AddText(ImVec2(retMin.x + 10.0f, lineY), IM_COL32(230, 235, 244, textAlpha),
-                label.c_str());
-    lineY += 18.0f;
-    ++returnCount;
-  }
 
-  if (returnCount == 0) {
-    dl->AddText(ImVec2(retMin.x + 8.0f, retMin.y + 10.0f),
-                IM_COL32(150, 150, 170, 255),
-                "Return values will appear here");
+    // Auto-scroll to the newest entry
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY() - 1.0f)
+      ImGui::SetScrollHereY(1.0f);
+
+    ImGui::EndChild();
   }
+  ImGui::PopStyleVar();
+  ImGui::PopStyleColor();
+}
+
+int Visualizer::GetStepCountOfType(StepType type) const {
+  int count = 0;
+  for (const auto &s : m_Steps)
+    if (s.type == type)
+      ++count;
+  return count;
 }
 
 // ---------------------------------------------------------------------------
@@ -1661,16 +1608,44 @@ void Visualizer::RenderKruskals() {
     return label;
   };
 
+  auto shade = [](ImU32 color, float scale, int alpha) {
+    ImVec4 v = ImGui::ColorConvertU32ToFloat4(color);
+    int r = static_cast<int>(v.x * 255.0f * scale);
+    int g = static_cast<int>(v.y * 255.0f * scale);
+    int b = static_cast<int>(v.z * 255.0f * scale);
+    if (r < 0) r = 0;
+    if (g < 0) g = 0;
+    if (b < 0) b = 0;
+    if (r > 255) r = 255;
+    if (g > 255) g = 255;
+    if (b > 255) b = 255;
+    if (alpha < 0) alpha = 0;
+    if (alpha > 255) alpha = 255;
+    return IM_COL32(r, g, b, alpha);
+  };
+
+  const ImU32 themeDefault = GetThemeColor(StepType::Default);
+  const ImU32 themeCompare = GetThemeColor(StepType::Compare);
+  const ImU32 themeSwap = GetThemeColor(StepType::Swap);
+  const ImU32 themeSorted = GetThemeColor(StepType::Sorted);
+  const ImU32 themePivot = GetThemeColor(StepType::Pivot);
+
+  const ImU32 graphBg = shade(themeDefault, 0.18f, 255);
+  const ImU32 graphBorder = shade(themePivot, 0.40f, 185);
+  const ImU32 rowHighlight = shade(themeCompare, 0.45f, 120);
+  const ImU32 panelTextMuted = shade(themeDefault, 1.70f, 255);
+  const ImU32 nodeBorder = shade(themeDefault, 0.24f, 255);
+
   // Component colour palette (8 distinct colours, cycling)
-  static const ImU32 kCompColors[] = {
-      IM_COL32(80,  160, 255, 255), // blue
-      IM_COL32(255, 200,  50, 255), // gold
-      IM_COL32(80,  220, 130, 255), // green
-      IM_COL32(255, 100, 100, 255), // red
-      IM_COL32(180, 100, 255, 255), // purple
-      IM_COL32(255, 160,  80, 255), // orange
-      IM_COL32(80,  220, 220, 255), // cyan
-      IM_COL32(255, 150, 200, 255), // pink
+  const ImU32 kCompColors[] = {
+      shade(themeDefault, 1.00f, 255),
+      shade(themeCompare, 1.00f, 255),
+      shade(themeSorted, 1.00f, 255),
+      shade(themePivot, 1.00f, 255),
+      shade(themeSwap, 1.00f, 255),
+      shade(themeDefault, 1.30f, 255),
+      shade(themeCompare, 0.75f, 255),
+      shade(themePivot, 0.75f, 255),
   };
   static const int kNumColors = 8;
 
@@ -1724,7 +1699,6 @@ void Visualizer::RenderKruskals() {
   ImGui::PopStyleVar(3);
   ImGui::Dummy(ImVec2(0, 6.0f));
 
-  // ── Canvas area ──────────────────────────────────────────────────────────
   if (!m_ShowGraphSimulation) {
     ImVec2 sz = ImGui::GetContentRegionAvail();
     ImVec2 origin = ImGui::GetCursorScreenPos();
@@ -1749,7 +1723,6 @@ void Visualizer::RenderKruskals() {
   float edgeListW = avail.x * 0.30f;
   float graphW    = avail.x - edgeListW - 8.0f;
 
-  // ── Left: graph canvas ───────────────────────────────────────────────────
   ImVec2 graphOrigin = ImGui::GetCursorScreenPos();
   ImDrawList *dl = ImGui::GetWindowDrawList();
 
@@ -1760,13 +1733,11 @@ void Visualizer::RenderKruskals() {
   // Background
   dl->AddRectFilled(graphOrigin,
                     ImVec2(graphOrigin.x + graphW, graphOrigin.y + avail.y),
-                    IM_COL32(14, 17, 24, 255), 8.0f);
+          graphBg, 8.0f);
   dl->AddRect(graphOrigin,
               ImVec2(graphOrigin.x + graphW, graphOrigin.y + avail.y),
-              IM_COL32(50, 55, 70, 180), 8.0f, 0, 1.0f);
+        graphBorder, 8.0f, 0, 1.0f);
 
-  // Node positions — grid layout to minimize edge crossings
-  // Nodes arranged in rows: ceil(sqrt(n)) columns, enough rows to fit all
   int cols = (int)ceilf(sqrtf((float)n));
   int rows = (n + cols - 1) / cols;
 
@@ -1826,22 +1797,22 @@ void Visualizer::RenderKruskals() {
     if (isCurEdge && cur.type == GraphStepType::Consider) {
       float pulse = 0.7f + 0.3f * sinf(m_GlobalTime * 6.0f);
       int alpha = (int)(pulse * 255);
-      color = IM_COL32(255, 190, 50, alpha);
+      color = shade(themeCompare, 1.0f, alpha);
       thickness = 3.5f;
     } else if (isCurEdge && cur.type == GraphStepType::Accept) {
-      color = IM_COL32(80, 230, 150, 255);
+      color = shade(themeSorted, 1.0f, 255);
       thickness = 3.5f;
     } else if (isCurEdge && cur.type == GraphStepType::Reject) {
-      color = IM_COL32(220, 70, 70, 255);
+      color = shade(themeSwap, 1.0f, 255);
       thickness = 2.5f;
     } else if (isInMST) {
-      color = IM_COL32(80, 220, 150, 220);
+      color = shade(themeSorted, 1.0f, 220);
       thickness = 2.5f;
     } else if (isRejected) {
-      color = IM_COL32(160, 60, 60, 140);
+      color = shade(themeSwap, 0.75f, 140);
       thickness = 1.0f;
     } else {
-      color = IM_COL32(90, 95, 110, 200);
+      color = shade(themeDefault, 0.65f, 200);
       thickness = 1.2f;
     }
 
@@ -1855,9 +1826,10 @@ void Visualizer::RenderKruskals() {
     // Small background pill
     dl->AddRectFilled(ImVec2(mid.x - tsz.x * 0.5f - 3, mid.y - tsz.y * 0.5f - 1),
                       ImVec2(mid.x + tsz.x * 0.5f + 3, mid.y + tsz.y * 0.5f + 1),
-                      IM_COL32(14, 17, 24, 200), 3.0f);
+              shade(themeDefault, 0.20f, 200), 3.0f);
     dl->AddText(ImVec2(mid.x - tsz.x * 0.5f, mid.y - tsz.y * 0.5f),
-                isCurEdge ? IM_COL32(255, 230, 100, 255) : IM_COL32(180, 185, 200, 220),
+            isCurEdge ? shade(themeCompare, 1.0f, 255)
+              : shade(themeDefault, 1.75f, 220),
                 wbuf);
   }
 
@@ -1867,7 +1839,7 @@ void Visualizer::RenderKruskals() {
     int compIdx = (i < (int)cur.componentId.size()) ? cur.componentId[i] : i;
     ImU32 nodeColor = kCompColors[compIdx % kNumColors];
 
-    dl->AddCircleFilled(nodePos[i], nodeR, IM_COL32(14, 17, 24, 255));
+    dl->AddCircleFilled(nodePos[i], nodeR, nodeBorder);
     dl->AddCircleFilled(nodePos[i], nodeR - 2.0f, nodeColor);
 
     // Node label
@@ -1875,19 +1847,17 @@ void Visualizer::RenderKruskals() {
     snprintf(nbuf, sizeof(nbuf), "%d", i + 1);
     ImVec2 nsz = ImGui::CalcTextSize(nbuf);
     dl->AddText(ImVec2(nodePos[i].x - nsz.x * 0.5f, nodePos[i].y - nsz.y * 0.5f),
-                IM_COL32(10, 10, 15, 255), nbuf);
+          shade(themeDefault, 0.12f, 255), nbuf);
   }
 
   dl->PopClipRect();
 
-  // Advance cursor past the graph area
   ImGui::SetCursorScreenPos(ImVec2(graphOrigin.x + graphW + 8.0f, graphOrigin.y));
-
-  // ── Right: sorted edge list ───────────────────────────────────────────────
   ImGui::BeginChild("##edgeList", ImVec2(edgeListW, avail.y), false,
                     ImGuiWindowFlags_NoScrollbar);
 
-  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_Text,
+                        ImGui::ColorConvertU32ToFloat4(panelTextMuted));
   if (isPrim)
     ImGui::Text(ICON_FA_PROJECT_DIAGRAM "  Used Edges ");
   else
@@ -1932,13 +1902,16 @@ void Visualizer::RenderKruskals() {
         ImVec2 rmax(rmin.x + edgeListW - 4,
                     rmin.y + ImGui::GetTextLineHeightWithSpacing());
         ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax,
-                                                  IM_COL32(60, 50, 20, 120), 3.0f);
+                                                  rowHighlight, 3.0f);
       }
 
       std::string rowbuf =
           FormatEdgePair(e.src, e.dest) + "  w=" + std::to_string(e.weight);
-      ImVec4 textColor = isCurrentAccepted ? ImVec4(1.0f, 0.85f, 0.4f, 1.0f)
-                                           : ImVec4(0.7f, 0.70f, 0.8f, 1.0f);
+      ImVec4 textColor = isCurrentAccepted
+                 ? ImGui::ColorConvertU32ToFloat4(
+                   shade(themeCompare, 1.0f, 255))
+                 : ImGui::ColorConvertU32ToFloat4(
+                   shade(themeDefault, 1.65f, 255));
       ImGui::TextColored(textColor, "%s", rowbuf.c_str());
     }
   } else {
@@ -1976,7 +1949,7 @@ void Visualizer::RenderKruskals() {
         ImVec2 rmax(rmin.x + edgeListW - 4,
                     rmin.y + ImGui::GetTextLineHeightWithSpacing());
         ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax,
-                                                  IM_COL32(60, 50, 20, 120), 3.0f);
+                                                  rowHighlight, 3.0f);
       }
 
       // Status icon
@@ -1984,16 +1957,16 @@ void Visualizer::RenderKruskals() {
       ImVec4 iconColor;
       if (isInMST) {
         icon = ICON_FA_CHECK;
-        iconColor = ImVec4(0.3f, 0.9f, 0.55f, 1.0f);
+        iconColor = ImGui::ColorConvertU32ToFloat4(shade(themeSorted, 1.0f, 255));
       } else if (isRejected) {
         icon = ICON_FA_TIMES;
-        iconColor = ImVec4(0.9f, 0.35f, 0.35f, 1.0f);
+        iconColor = ImGui::ColorConvertU32ToFloat4(shade(themeSwap, 1.0f, 255));
       } else if (isCurEdge) {
         icon = ICON_FA_ARROW_RIGHT;
-        iconColor = ImVec4(1.0f, 0.75f, 0.2f, 1.0f);
+        iconColor = ImGui::ColorConvertU32ToFloat4(shade(themeCompare, 1.0f, 255));
       } else {
         icon = "  ";
-        iconColor = ImVec4(0.5f, 0.5f, 0.6f, 1.0f);
+        iconColor = ImGui::ColorConvertU32ToFloat4(shade(themeDefault, 1.45f, 255));
       }
 
       ImGui::TextColored(iconColor, "%s", icon);
@@ -2002,10 +1975,17 @@ void Visualizer::RenderKruskals() {
       std::string rowbuf =
           FormatEdgePair(e.src, e.dest) + "  w=" + std::to_string(e.weight);
 
-      ImVec4 textColor = isCurEdge  ? ImVec4(1.0f, 0.85f, 0.4f, 1.0f)
-                       : isInMST    ? ImVec4(0.4f, 0.95f, 0.6f, 1.0f)
-                       : isRejected ? ImVec4(0.6f, 0.35f, 0.35f, 0.8f)
-                                    : ImVec4(0.7f, 0.70f, 0.8f, 1.0f);
+      ImVec4 textColor = isCurEdge
+                 ? ImGui::ColorConvertU32ToFloat4(
+                   shade(themeCompare, 1.0f, 255))
+                 : isInMST
+                   ? ImGui::ColorConvertU32ToFloat4(
+                     shade(themeSorted, 1.0f, 255))
+                   : isRejected
+                     ? ImGui::ColorConvertU32ToFloat4(
+                       shade(themeSwap, 0.75f, 200))
+                     : ImGui::ColorConvertU32ToFloat4(
+                       shade(themeDefault, 1.65f, 255));
       ImGui::TextColored(textColor, "%s", rowbuf.c_str());
     }
   }
@@ -2017,19 +1997,25 @@ void Visualizer::RenderKruskals() {
   ImGui::Dummy(ImVec2(0, 6));
   ImGui::Separator();
   ImGui::Dummy(ImVec2(0, 2));
-  ImGui::TextColored(ImVec4(0.9f, 0.8f, 0.3f, 1.0f), "Weighted Time: %d",
-                     cur.mstCost);
+  ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(shade(themeCompare, 1.0f, 255)),
+                     "Weighted Time: %d", cur.mstCost);
 
   ImGui::EndChild(); // edgeScroll
   ImGui::EndChild(); // edgeList
 
-  // ── Bottom status line ────────────────────────────────────────────────────
   ImGui::SetCursorScreenPos(ImVec2(graphOrigin.x, graphOrigin.y + avail.y + 4.0f));
 
-  ImVec4 descColor = cur.type == GraphStepType::Accept  ? ImVec4(0.3f, 0.9f, 0.55f, 1.0f)
-                   : cur.type == GraphStepType::Reject   ? ImVec4(0.9f, 0.4f, 0.4f,  1.0f)
-                   : cur.type == GraphStepType::Done     ? ImVec4(0.9f, 0.8f, 0.3f,  1.0f)
-                                                         : ImVec4(1.0f, 0.75f, 0.2f, 1.0f);
+    ImVec4 descColor = cur.type == GraphStepType::Accept
+           ? ImGui::ColorConvertU32ToFloat4(
+             shade(themeSorted, 1.0f, 255))
+           : cur.type == GraphStepType::Reject
+             ? ImGui::ColorConvertU32ToFloat4(
+               shade(themeSwap, 1.0f, 255))
+             : cur.type == GraphStepType::Done
+               ? ImGui::ColorConvertU32ToFloat4(
+                 shade(themeCompare, 1.0f, 255))
+               : ImGui::ColorConvertU32ToFloat4(
+                 shade(themeCompare, 1.0f, 255));
   ImGui::TextColored(descColor, "%s", cur.description.c_str());
 
   // Progress bar on the right

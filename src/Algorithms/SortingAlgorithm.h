@@ -10,8 +10,6 @@ public:
     
     virtual void Sort(std::vector<int>& array) = 0;
     virtual std::string GetName() const = 0;
-    virtual std::string GetTimeComplexity() const = 0;
-    virtual std::string GetSpaceComplexity() const = 0;
 
 protected:
     void Compare(int idx1, int idx2, const std::vector<int>& array);
@@ -28,8 +26,6 @@ public:
     
     void Sort(std::vector<int>& array) override;
     std::string GetName() const override { return "Bubble Sort"; }
-    std::string GetTimeComplexity() const override { return "O(n^2)"; }
-    std::string GetSpaceComplexity() const override { return "O(1)"; }
 };
 
 class SelectionSort : public SortingAlgorithm {
@@ -38,8 +34,6 @@ public:
     
     void Sort(std::vector<int>& array) override;
     std::string GetName() const override { return "Selection Sort"; }
-    std::string GetTimeComplexity() const override { return "O(n^2)"; }
-    std::string GetSpaceComplexity() const override { return "O(1)"; }
 };
 
 class InsertionSort : public SortingAlgorithm {
@@ -48,6 +42,4 @@ public:
     
     void Sort(std::vector<int>& array) override;
     std::string GetName() const override { return "Insertion Sort"; }
-    std::string GetTimeComplexity() const override { return "O(n^2)"; }
-    std::string GetSpaceComplexity() const override { return "O(1)"; }
 };

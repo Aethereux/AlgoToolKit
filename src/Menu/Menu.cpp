@@ -10,12 +10,103 @@
 #include <cmath>
 #include <random>
 
+static void ApplyDeepSpaceTheme() {
+  ImGui::StyleColorsDark();
+  ImGuiStyle &s  = ImGui::GetStyle();
+  ImVec4     *c  = s.Colors;
+
+  s.WindowRounding    = 6.0f;
+  s.ChildRounding     = 6.0f;
+  s.FrameRounding     = 5.0f;
+  s.PopupRounding     = 5.0f;
+  s.GrabRounding      = 4.0f;
+  s.TabRounding       = 5.0f;
+  s.ScrollbarRounding = 6.0f;
+  s.WindowBorderSize  = 0.0f;
+  s.ChildBorderSize   = 1.0f;
+  s.FrameBorderSize   = 0.0f;
+  s.ScrollbarSize     = 10.0f;
+  s.GrabMinSize       = 8.0f;
+
+  //  Backgrounds 
+  c[ImGuiCol_WindowBg]           = ImVec4(0.051f, 0.067f, 0.090f, 1.000f); // #0D1117
+  c[ImGuiCol_ChildBg]            = ImVec4(0.039f, 0.055f, 0.078f, 1.000f); // #0A0E14
+  c[ImGuiCol_PopupBg]            = ImVec4(0.078f, 0.102f, 0.149f, 0.980f); // #141A26
+  c[ImGuiCol_MenuBarBg]          = ImVec4(0.039f, 0.055f, 0.078f, 1.000f);
+
+  //  Borders 
+  c[ImGuiCol_Border]             = ImVec4(0.149f, 0.204f, 0.314f, 0.700f); // #263450
+  c[ImGuiCol_BorderShadow]       = ImVec4(0.000f, 0.000f, 0.000f, 0.000f);
+  c[ImGuiCol_Separator]          = ImVec4(0.149f, 0.204f, 0.314f, 0.600f);
+
+  //  Text 
+  c[ImGuiCol_Text]               = ImVec4(0.878f, 0.910f, 1.000f, 1.000f); // #E0E8FF
+  c[ImGuiCol_TextDisabled]       = ImVec4(0.310f, 0.380f, 0.530f, 1.000f);
+
+  //  Frames 
+  c[ImGuiCol_FrameBg]            = ImVec4(0.067f, 0.094f, 0.157f, 1.000f); // #111828
+  c[ImGuiCol_FrameBgHovered]     = ImVec4(0.102f, 0.157f, 0.251f, 1.000f); // #1A2840
+  c[ImGuiCol_FrameBgActive]      = ImVec4(0.118f, 0.188f, 0.314f, 1.000f); // #1E3050
+
+  //  Title bar 
+  c[ImGuiCol_TitleBg]            = ImVec4(0.039f, 0.055f, 0.086f, 1.000f);
+  c[ImGuiCol_TitleBgActive]      = ImVec4(0.051f, 0.071f, 0.110f, 1.000f);
+  c[ImGuiCol_TitleBgCollapsed]   = ImVec4(0.039f, 0.055f, 0.086f, 0.750f);
+
+  //  Scrollbar 
+  c[ImGuiCol_ScrollbarBg]        = ImVec4(0.039f, 0.055f, 0.078f, 1.000f);
+  c[ImGuiCol_ScrollbarGrab]      = ImVec4(0.102f, 0.165f, 0.275f, 1.000f);
+  c[ImGuiCol_ScrollbarGrabHovered]= ImVec4(0.141f, 0.204f, 0.376f, 1.000f);
+  c[ImGuiCol_ScrollbarGrabActive]= ImVec4(0.000f, 0.749f, 1.000f, 0.800f); // cyan
+
+  //  Accent (cyan #00BFFF) 
+  c[ImGuiCol_CheckMark]          = ImVec4(0.000f, 0.749f, 1.000f, 1.000f);
+  c[ImGuiCol_SliderGrab]         = ImVec4(0.000f, 0.659f, 0.910f, 1.000f);
+  c[ImGuiCol_SliderGrabActive]   = ImVec4(0.000f, 0.749f, 1.000f, 1.000f);
+
+  //  Buttons 
+  c[ImGuiCol_Button]             = ImVec4(0.102f, 0.141f, 0.251f, 1.000f); // #1A2440
+  c[ImGuiCol_ButtonHovered]      = ImVec4(0.141f, 0.196f, 0.376f, 1.000f); // #243260
+  c[ImGuiCol_ButtonActive]       = ImVec4(0.000f, 0.447f, 0.700f, 1.000f); // deep cyan
+
+  //  Headers / Selectables 
+  c[ImGuiCol_Header]             = ImVec4(0.102f, 0.165f, 0.282f, 0.700f);
+  c[ImGuiCol_HeaderHovered]      = ImVec4(0.141f, 0.204f, 0.376f, 0.800f);
+  c[ImGuiCol_HeaderActive]       = ImVec4(0.000f, 0.447f, 0.700f, 0.900f);
+
+  //  Tabs 
+  c[ImGuiCol_Tab]                = ImVec4(0.067f, 0.094f, 0.157f, 1.000f);
+  c[ImGuiCol_TabHovered]         = ImVec4(0.000f, 0.549f, 0.800f, 0.800f);
+  c[ImGuiCol_TabActive]          = ImVec4(0.000f, 0.447f, 0.700f, 1.000f);
+  c[ImGuiCol_TabUnfocused]       = ImVec4(0.051f, 0.071f, 0.110f, 1.000f);
+  c[ImGuiCol_TabUnfocusedActive] = ImVec4(0.067f, 0.110f, 0.200f, 1.000f);
+
+  //  Plots (bar graph accent) 
+  c[ImGuiCol_PlotHistogram]      = ImVec4(0.000f, 0.749f, 1.000f, 1.000f); // cyan
+  c[ImGuiCol_PlotHistogramHovered]= ImVec4(0.310f, 0.859f, 1.000f, 1.000f);
+  c[ImGuiCol_PlotLines]          = ImVec4(0.000f, 0.749f, 1.000f, 0.800f);
+  c[ImGuiCol_PlotLinesHovered]   = ImVec4(0.310f, 0.859f, 1.000f, 1.000f);
+
+  //  Tables 
+  c[ImGuiCol_TableHeaderBg]      = ImVec4(0.059f, 0.082f, 0.125f, 1.000f);
+  c[ImGuiCol_TableBorderStrong]  = ImVec4(0.149f, 0.204f, 0.314f, 1.000f);
+  c[ImGuiCol_TableBorderLight]   = ImVec4(0.102f, 0.141f, 0.227f, 1.000f);
+  c[ImGuiCol_TableRowBg]         = ImVec4(0.039f, 0.055f, 0.090f, 0.400f);
+  c[ImGuiCol_TableRowBgAlt]      = ImVec4(0.059f, 0.082f, 0.137f, 0.400f);
+
+  //  Misc 
+  c[ImGuiCol_ResizeGrip]         = ImVec4(0.000f, 0.749f, 1.000f, 0.200f);
+  c[ImGuiCol_ResizeGripHovered]  = ImVec4(0.000f, 0.749f, 1.000f, 0.600f);
+  c[ImGuiCol_ResizeGripActive]   = ImVec4(0.000f, 0.749f, 1.000f, 0.900f);
+  c[ImGuiCol_NavHighlight]       = ImVec4(0.000f, 0.749f, 1.000f, 1.000f);
+}
+
 static int GetRecursionMaxForSimulation(int simulationIndex) {
   switch (simulationIndex) {
   case 0:
     return 12; // 13! overflows 32-bit int
   case 1:
-    return 20; // naive recursive fibonacci gets expensive quickly
+    return 20; // recursive fibonacci gets expensive quickly
   case 2:
     return 10; // Tower of Hanoi grows as 2^n - 1 moves
   default:
@@ -36,7 +127,10 @@ static int GetRecursionDefaultForSimulation(int simulationIndex) {
   }
 }
 
-Menu::Menu() { m_Visualizer = new Visualizer(); }
+Menu::Menu() {
+  m_Visualizer = new Visualizer();
+  ApplyDeepSpaceTheme();
+}
 
 void Menu::Render() {
   const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -50,11 +144,12 @@ void Menu::Render() {
   ImGui::Begin("Algorithm Analysis Toolkit", nullptr, window_flags);
   ImGui::PopStyleVar();
 
-  float sidebarWidth = 280.0f;
+  float totalWidth   = ImGuiHelper::getWidth();
+  float sidebarWidth = std::min(280.0f, totalWidth * 0.30f);
 
   // Sidebar
-  ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.08f, 0.08f, 0.12f, 1.0f));
-  ImGui::BeginChild("sidebar", ImVec2(sidebarWidth, 0), true);
+  ImGui::BeginChild("sidebar", ImVec2(sidebarWidth, 0), true,
+                    ImGuiWindowFlags_NoScrollbar);
 
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
   ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
@@ -88,8 +183,8 @@ void Menu::Render() {
     break;
   }
 
-  // Spacer 
-  float footerHeight = 50.0f;
+  // Spacer
+  float footerHeight = 36.0f;
   float available = ImGui::GetContentRegionAvail().y - footerHeight;
   if (available > 0)
     ImGui::Dummy(ImVec2(0, available));
@@ -103,7 +198,6 @@ void Menu::Render() {
 
   ImGui::PopStyleVar(2);
   ImGui::EndChild();
-  ImGui::PopStyleColor();
 
   ImGui::SameLine();
 
@@ -114,6 +208,8 @@ void Menu::Render() {
   // Algorithm Selection
   const char *modes[] = {"Sorting Algorithms", "MST Algorithms",
                          "Recursion Simulation"};
+  if (m_SelectedMode < 0 || m_SelectedMode > 2)
+    m_SelectedMode = 0;
   ImVec4 disabledColor = ImVec4(0.5f, 0.5f, 0.6f, 1.0f);
   const int previousMode = m_SelectedMode;
   ImGuiHelper::drawTabHorizontally("top_tabs",
@@ -150,8 +246,12 @@ void Menu::Render() {
       m_Visualizer->Render();
     }
   } else if (m_Visualizer) {
-    m_Visualizer->Update();
-    m_Visualizer->Render();
+    if (m_ShowComparison && m_SelectedMode == 0) {
+      RenderComparisonTable();
+    } else {
+      m_Visualizer->Update();
+      m_Visualizer->Render();
+    }
   }
   ImGui::EndChild();
 
@@ -197,13 +297,13 @@ void Menu::RenderSortingTab(float sidebarWidth) {
       m_HasRun = false;
     }
 
-    // Description of algorithm
-    if (selected) {
-      ImGui::SetCursorPosX(36);
-      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 0.8f));
-      ImGui::TextWrapped("%s", algorithms[i].hint);
-      ImGui::PopStyleColor();
-    }
+    // Always reserve hint line so layout height never shifts
+    ImGui::SetCursorPosX(36);
+    ImGui::PushStyleColor(ImGuiCol_Text, selected
+        ? ImVec4(0.5f, 0.5f, 0.6f, 0.8f)
+        : ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+    ImGui::TextUnformatted(algorithms[i].hint);
+    ImGui::PopStyleColor();
   }
 
   ImGui::PopStyleColor(3);
@@ -218,8 +318,11 @@ void Menu::RenderSortingTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
                         ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
   if (ImGui::Button(ICON_FA_SYNC " Generate", ImVec2(halfBtn, 28))) {
-    if (m_Visualizer)
+    if (m_Visualizer) {
       m_Visualizer->GenerateRandomArray(m_Visualizer->GetConfig().arraySize);
+      m_ShowComparison = false;
+      m_CompareResults.clear();
+    }
   }
   ImGui::SameLine();
   if (ImGui::Button(ICON_FA_UNDO " Reset", ImVec2(halfBtn, 28))) {
@@ -240,9 +343,22 @@ void Menu::RenderSortingTab(float sidebarWidth) {
 
   if (ImGui::Button(ICON_FA_PLAY_CIRCLE " Run Algorithm",
                     ImVec2(sidebarWidth - 28, 36))) {
+    m_ShowComparison = false;
     RunSelectedAlgorithm();
   }
 
+  ImGui::PopStyleColor(3);
+
+  // Compare All button
+  ImGui::Dummy(ImVec2(0, 4));
+  ImGui::SetCursorPosX(14);
+  ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.18f, 0.22f, 0.32f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.30f, 0.45f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.12f, 0.16f, 0.26f, 1.0f));
+  if (ImGui::Button(ICON_FA_CHART_BAR " Compare All",
+                    ImVec2(sidebarWidth - 28, 28))) {
+    RunComparisonBenchmark();
+  }
   ImGui::PopStyleColor(3);
 
   //  Settings
@@ -266,75 +382,35 @@ void Menu::RenderSortingTab(float sidebarWidth) {
     ImGui::Dummy(ImVec2(0, 4));
     ImGui::SetCursorPosX(16);
     ImGui::SliderInt("Speed##sp", &config.animationSpeed, 1, 200);
-    ImGui::Dummy(ImVec2(0, 4));
-    ImGui::SetCursorPosX(16);
-
-    const char *themes[] = {"Cyberpunk", "Ocean", "Sunset", "Matrix", "Pastel"};
-    int themeIdx = static_cast<int>(config.theme);
-    if (ImGui::Combo("Theme##th", &themeIdx, themes, 5))
-      config.theme = static_cast<ColorTheme>(themeIdx);
 
     ImGui::PopItemWidth();
 
     ImGui::Dummy(ImVec2(0, 6));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 6));
     ImGui::SetCursorPosX(16);
+    ImGui::Columns(3, nullptr, false);
     ImGui::Checkbox("Smooth", &config.smoothAnimation);
-    ImGui::SameLine();
-    ImGui::Checkbox("Glow", &config.showGlow);
-    ImGui::SameLine();
-    ImGui::Checkbox("Values", &config.showValues);
-
-    ImGui::Dummy(ImVec2(0, 4));
-    ImGui::SetCursorPosX(16);
     ImGui::Checkbox("Grid", &config.showGrid);
-    ImGui::SameLine();
+    ImGui::NextColumn();
+    ImGui::Checkbox("Glow", &config.showGlow);
     ImGui::Checkbox("Highlight", &config.highlightOps);
+    ImGui::NextColumn();
+    ImGui::Checkbox("Values", &config.showValues);
     ImGui::PopStyleVar();
+    ImGui::Columns(1);
   }
 
-  //  Complexity Info
+  // Profiler
   if (m_HasRun) {
-  ImGui::Dummy(ImVec2(0, 8));
-  ImGui::Separator();
-  ImGui::Dummy(ImVec2(0, 4));
+    ImGui::Dummy(ImVec2(0, 8));
+    ImGui::Separator();
+    ImGui::Dummy(ImVec2(0, 4));
 
     ImGui::SetCursorPosX(16);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
-    ImGui::Text(ICON_FA_INFO_CIRCLE "  COMPLEXITY");
+    ImGui::Text(ICON_FA_CHART_PIE "  PROFILER");
     ImGui::PopStyleColor();
     ImGui::Dummy(ImVec2(0, 4));
-
-    const char *name;
-    const char *timeC;
-    const char *spaceC;
-    const char *bestC;
-    switch (m_SelectedSortingAlgorithm) {
-    case 0:
-      name = "Bubble Sort";
-      timeC = "O(n²)";
-      spaceC = "O(1)";
-      bestC = "O(n)";
-      break;
-    case 1:
-      name = "Selection Sort";
-      timeC = "O(n²)";
-      spaceC = "O(1)";
-      bestC = "O(n²)";
-      break;
-    case 2:
-      name = "Insertion Sort";
-      timeC = "O(n²)";
-      spaceC = "O(1)";
-      bestC = "O(n)";
-      break;
-    default:
-      name = "";
-      timeC = "";
-      spaceC = "";
-      bestC = "";
-      break;
-    }
 
     auto InfoRow = [](const char *icon, const char *label, const char *value) {
       ImGui::SetCursorPosX(20);
@@ -346,20 +422,6 @@ void Menu::RenderSortingTab(float sidebarWidth) {
       ImGui::Text("%s", value);
       ImGui::PopStyleColor();
     };
-
-    InfoRow(ICON_FA_CLOCK, "Worst", timeC);
-    InfoRow(ICON_FA_BOLT, "Best", bestC);
-    InfoRow(ICON_FA_MEMORY, "Space", spaceC);
-
-    ImGui::Dummy(ImVec2(0, 8));
-    ImGui::Separator();
-    ImGui::Dummy(ImVec2(0, 4));
-
-    ImGui::SetCursorPosX(16);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
-    ImGui::Text(ICON_FA_CHART_PIE "  PROFILER");
-    ImGui::PopStyleColor();
-    ImGui::Dummy(ImVec2(0, 4));
 
     char timeBuf[32];
     snprintf(timeBuf, sizeof(timeBuf), "%.3f ms", m_LastExecutionTimeMs);
@@ -464,36 +526,6 @@ void Menu::RenderGraphTab(float sidebarWidth) {
     ImGui::SliderInt("Speed##gs", &m_Visualizer->GetConfig().animationSpeed, 1, 200);
   ImGui::PopItemWidth();
 
-  // Complexity info
-  if (m_GraphHasRun) {
-    ImGui::Dummy(ImVec2(0, 8));
-    ImGui::Separator();
-    ImGui::Dummy(ImVec2(0, 4));
-    ImGui::SetCursorPosX(16);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.7f, 1.0f));
-    ImGui::Text(ICON_FA_INFO_CIRCLE "  COMPLEXITY");
-    ImGui::PopStyleColor();
-    ImGui::Dummy(ImVec2(0, 4));
-
-    auto InfoRow = [](const char *icon, const char *label, const char *value) {
-      ImGui::SetCursorPosX(20);
-      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 1.0f));
-      ImGui::Text("%s %s:", icon, label);
-      ImGui::PopStyleColor();
-      ImGui::SameLine(160);
-      ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.8f, 0.3f, 1.0f));
-      ImGui::Text("%s", value);
-      ImGui::PopStyleColor();
-    };
-
-    if (m_SelectedGraphAlgorithm == 1) {
-      InfoRow(ICON_FA_CLOCK,  "Time",  "O(E log V)");
-      InfoRow(ICON_FA_MEMORY, "Space", "O(V + E)");
-    } else {
-      InfoRow(ICON_FA_CLOCK,  "Time",  "O(E log E)");
-      InfoRow(ICON_FA_MEMORY, "Space", "O(V + E)");
-    }
-  }
 }
 
 void Menu::RenderRecursionTab(float sidebarWidth) {
@@ -616,13 +648,7 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
     ImGui::Dummy(ImVec2(0, 4));
     ImGui::SetCursorPosX(16);
     ImGui::SliderInt("Speed##rec_sp", &config.animationSpeed, 1, 200);
-    ImGui::Dummy(ImVec2(0, 4));
-    ImGui::SetCursorPosX(16);
 
-    const char *themes[] = {"Cyberpunk", "Ocean", "Sunset", "Matrix", "Pastel"};
-    int themeIdx = static_cast<int>(config.theme);
-    if (ImGui::Combo("Theme##rec_th", &themeIdx, themes, 5))
-      config.theme = static_cast<ColorTheme>(themeIdx);
   }
 }
 
@@ -670,6 +696,195 @@ void Menu::RunSelectedAlgorithm() {
 
   m_HasRun = true;
   m_Visualizer->Play();
+}
+
+void Menu::RunComparisonBenchmark() {
+  if (!m_Visualizer)
+    return;
+
+  const std::vector<int> &original = m_Visualizer->GetOriginalArray();
+  if (original.empty())
+    return;
+
+  m_CompareResults.clear();
+
+  SortingAlgorithm *algos[3] = {
+      new BubbleSort(m_Visualizer),
+      new SelectionSort(m_Visualizer),
+      new InsertionSort(m_Visualizer),
+  };
+  const char *names[3] = {"Bubble Sort", "Selection Sort", "Insertion Sort"};
+
+  for (int i = 0; i < 3; ++i) {
+    m_Visualizer->Reset();
+    m_Visualizer->ClearSteps();
+
+    std::vector<int> arrCopy = original;
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+    algos[i]->Sort(arrCopy);
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    SortCompareResult r;
+    r.name        = names[i];
+    r.timeMs      = std::chrono::duration<double, std::milli>(t1 - t0).count();
+    r.totalOps    = m_Visualizer->GetTotalSteps();
+    r.comparisons = m_Visualizer->GetStepCountOfType(StepType::Compare);
+    r.writes      = m_Visualizer->GetStepCountOfType(StepType::Swap)
+                  + m_Visualizer->GetStepCountOfType(StepType::Overwrite);
+    m_CompareResults.push_back(r);
+
+    delete algos[i];
+  }
+
+  // Leave visualizer in a clean state
+  m_Visualizer->Reset();
+  m_Visualizer->ClearSteps();
+  m_ShowComparison = true;
+}
+
+void Menu::RenderComparisonTable() {
+  if (m_CompareResults.empty())
+    return;
+
+  ImVec2 origin = ImGui::GetCursorScreenPos();
+  ImVec2 avail  = ImGui::GetContentRegionAvail();
+  ImDrawList *dl = ImGui::GetWindowDrawList();
+
+  // Background
+  dl->AddRectFilled(origin, ImVec2(origin.x + avail.x, origin.y + avail.y),
+                    IM_COL32(16, 18, 24, 230));
+
+  const float pad = 24.0f;
+
+  ImGui::Dummy(ImVec2(0, 18));
+  ImGui::SetCursorPosX(pad);
+  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.65f, 0.78f, 1.0f, 1.0f));
+  ImGui::Text(ICON_FA_CHART_BAR "  SIDE-BY-SIDE COMPARISON");
+  ImGui::PopStyleColor();
+
+  ImGui::SameLine(avail.x - 100.0f);
+  ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.22f, 0.25f, 0.35f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.32f, 0.36f, 0.50f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.14f, 0.16f, 0.24f, 1.0f));
+  if (ImGui::Button(ICON_FA_TIMES "  Close", ImVec2(84.0f, 26.0f)))
+    m_ShowComparison = false;
+  ImGui::PopStyleColor(3);
+
+  ImGui::SetCursorPosX(pad);
+  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.45f, 0.48f, 0.58f, 1.0f));
+  ImGui::Text("Array size: %d  —  same dataset for all three algorithms",
+              static_cast<int>(m_Visualizer->GetOriginalArray().size()));
+  ImGui::PopStyleColor();
+
+  ImGui::Dummy(ImVec2(0, 14));
+  ImGui::SetCursorPosX(pad);
+
+  int   maxCmp = 1, maxWrt = 1, maxOps = 1;
+  double maxTime = 1e-6;
+  for (const auto &r : m_CompareResults) {
+    maxCmp  = std::max(maxCmp,  r.comparisons);
+    maxWrt  = std::max(maxWrt,  r.writes);
+    maxOps  = std::max(maxOps,  r.totalOps);
+    maxTime = std::max(maxTime, r.timeMs);
+  }
+
+  int bestCmp = 0, bestWrt = 0, bestOps = 0, bestTime = 0;
+  for (int i = 1; i < static_cast<int>(m_CompareResults.size()); ++i) {
+    if (m_CompareResults[i].comparisons < m_CompareResults[bestCmp].comparisons)  bestCmp  = i;
+    if (m_CompareResults[i].writes      < m_CompareResults[bestWrt].writes)       bestWrt  = i;
+    if (m_CompareResults[i].totalOps    < m_CompareResults[bestOps].totalOps)     bestOps  = i;
+    if (m_CompareResults[i].timeMs      < m_CompareResults[bestTime].timeMs)      bestTime = i;
+  }
+
+  const float tableW = avail.x - pad * 2.0f;
+  const float rowH   = 56.0f;
+
+  ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, ImVec4(0.22f, 0.28f, 0.42f, 0.9f));
+  ImGui::PushStyleColor(ImGuiCol_TableBorderLight,  ImVec4(0.16f, 0.20f, 0.32f, 0.6f));
+  ImGui::PushStyleColor(ImGuiCol_TableHeaderBg,     ImVec4(0.10f, 0.13f, 0.22f, 1.0f));
+  ImGui::PushStyleColor(ImGuiCol_TableRowBg,        ImVec4(0.09f, 0.11f, 0.18f, 0.5f));
+  ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt,     ImVec4(0.12f, 0.15f, 0.24f, 0.5f));
+
+  if (ImGui::BeginTable("##cmp_table", 5,
+                        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                        ImGuiTableFlags_SizingFixedFit,
+                        ImVec2(tableW, 0.0f))) {
+
+    ImGui::TableSetupColumn("Algorithm",   ImGuiTableColumnFlags_WidthFixed,   160.0f);
+    ImGui::TableSetupColumn("Comparisons", ImGuiTableColumnFlags_WidthStretch, 1.0f);
+    ImGui::TableSetupColumn("Writes",      ImGuiTableColumnFlags_WidthStretch, 1.0f);
+    ImGui::TableSetupColumn("Total Ops",   ImGuiTableColumnFlags_WidthStretch, 1.0f);
+    ImGui::TableSetupColumn("Time (ms)",   ImGuiTableColumnFlags_WidthStretch, 0.8f);
+    ImGui::TableHeadersRow();
+
+    // Helper: draw a metric cell — bar + number, highlight best in green
+    auto MetricCell = [&](int col, int value, int maxVal, bool isBest) {
+      ImGui::TableSetColumnIndex(col);
+      ImVec2 cellMin = ImGui::GetCursorScreenPos();
+      float  cellW   = ImGui::GetContentRegionAvail().x;
+
+      float barW = (maxVal > 0) ? ((float)value / (float)maxVal) * (cellW - 10.0f) : 0.0f;
+      ImU32 barCol = isBest ? IM_COL32(35, 160, 85, 110) : IM_COL32(50, 90, 160, 80);
+      dl->AddRectFilled(ImVec2(cellMin.x + 5.0f, cellMin.y + 8.0f),
+                        ImVec2(cellMin.x + 5.0f + barW, cellMin.y + rowH - 8.0f),
+                        barCol, 4.0f);
+
+      ImGui::Dummy(ImVec2(0.0f, (rowH - ImGui::GetTextLineHeight()) * 0.5f - 2.0f));
+      if (isBest)
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.35f, 1.0f, 0.55f, 1.0f));
+      else
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.80f, 0.83f, 0.90f, 1.0f));
+      ImGui::Text("  %d", value);
+      ImGui::PopStyleColor();
+    };
+
+    for (int i = 0; i < static_cast<int>(m_CompareResults.size()); ++i) {
+      const auto &r = m_CompareResults[i];
+      ImGui::TableNextRow(0, rowH);
+
+      // Algorithm name column
+      ImGui::TableSetColumnIndex(0);
+      ImGui::Dummy(ImVec2(0.0f, (rowH - ImGui::GetTextLineHeight()) * 0.5f - 2.0f));
+      ImGui::Text("  %s", r.name.c_str());
+
+      MetricCell(1, r.comparisons, maxCmp,  i == bestCmp);
+      MetricCell(2, r.writes,      maxWrt,  i == bestWrt);
+      MetricCell(3, r.totalOps,    maxOps,  i == bestOps);
+
+      // Time column (double, not int)
+      ImGui::TableSetColumnIndex(4);
+      ImVec2 cellMin = ImGui::GetCursorScreenPos();
+      float  cellW   = ImGui::GetContentRegionAvail().x;
+      float  barW    = (float)(r.timeMs / maxTime) * (cellW - 10.0f);
+      bool   tBest   = (i == bestTime);
+      ImU32  barCol  = tBest ? IM_COL32(35, 160, 85, 110) : IM_COL32(50, 90, 160, 80);
+      dl->AddRectFilled(ImVec2(cellMin.x + 5.0f, cellMin.y + 8.0f),
+                        ImVec2(cellMin.x + 5.0f + barW, cellMin.y + rowH - 8.0f),
+                        barCol, 4.0f);
+      ImGui::Dummy(ImVec2(0.0f, (rowH - ImGui::GetTextLineHeight()) * 0.5f - 2.0f));
+      if (tBest)
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.35f, 1.0f, 0.55f, 1.0f));
+      else
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.80f, 0.83f, 0.90f, 1.0f));
+      ImGui::Text("  %.4f", r.timeMs);
+      ImGui::PopStyleColor();
+    }
+
+    ImGui::EndTable();
+  }
+
+  ImGui::PopStyleColor(5);
+
+  ImGui::Dummy(ImVec2(0, 12));
+  ImGui::SetCursorPosX(pad);
+  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.35f, 1.0f, 0.55f, 0.85f));
+  ImGui::Text(ICON_FA_CHECK_CIRCLE "  Green = best in that column");
+  ImGui::PopStyleColor();
+  ImGui::SetCursorPosX(pad);
+  ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.42f, 0.46f, 0.58f, 0.8f));
+  ImGui::Text("Writes = swaps + overwrites (insertion sort shifts instead of swapping)");
+  ImGui::PopStyleColor();
 }
 
 void Menu::RunGraphSimulation() {
@@ -750,9 +965,7 @@ void Menu::RunRecursionSimulation() {
     return;
 
   int &currentRecursionN = m_RecursionNBySimulation[m_SelectedRecursionSimulation];
-  currentRecursionN =
-      std::clamp(currentRecursionN, 1,
-                 GetRecursionMaxForSimulation(m_SelectedRecursionSimulation));
+  currentRecursionN = std::clamp(currentRecursionN, 1, GetRecursionMaxForSimulation(m_SelectedRecursionSimulation));
   m_Visualizer->Reset();
   m_Visualizer->ClearSteps();
 
