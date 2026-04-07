@@ -16,6 +16,7 @@ void PrimGraph::SetGraphInfo(int numVertices, const std::vector<Edge> &edges) {
 }
 
 void PrimGraph::SimulatePrims() {
+  // Prim simulation records each decision as a GraphStep for UI playback.
   m_Steps.clear();
 
   if (m_NumVertices <= 0)
@@ -137,12 +138,14 @@ void KruskalGraph::SetGraphInfo(int numVertices, const std::vector<Edge> &edges)
 }
 
 int KruskalGraph::Find(std::vector<int> &parent, int x) {
+  // Returns representative root of x in Union-Find.
   while (parent[x] != x)
     x = parent[x];
   return x;
 }
 
 bool KruskalGraph::Union(std::vector<int> &parent, int x, int y) {
+  // Joins two components; false means the edge would create a cycle.
   int rootX = Find(parent, x);
   int rootY = Find(parent, y);
 
@@ -154,6 +157,7 @@ bool KruskalGraph::Union(std::vector<int> &parent, int x, int y) {
 }
 
 void KruskalGraph::SimulateKruskals() {
+  // Kruskal simulation: sort by weight, accept only non-cycling edges.
   m_Steps.clear();
 
   std::vector<Edge> sortedEdges = m_Edges;

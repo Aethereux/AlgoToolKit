@@ -1550,6 +1550,7 @@ int Visualizer::GetStepCountOfType(StepType type) const {
 void Visualizer::SetGraphSimulation(int vertexCount,
                                     const std::vector<Edge> &edges,
                                     const std::vector<GraphStep> &steps) {
+  // Loads a new simulation snapshot set and keeps playback paused.
   m_GraphVertexCount = vertexCount;
   m_GraphEdges = edges;
   m_GraphSteps = steps;
@@ -1563,6 +1564,7 @@ void Visualizer::PlayGraphSimulation() {
   if (!m_ShowGraphSimulation || m_GraphSteps.empty())
     return;
 
+  // Restart from step 0 if a prior run already finished.
   if (m_GraphStep >= static_cast<int>(m_GraphSteps.size()) - 1)
     m_GraphStep = 0;
 
@@ -1581,6 +1583,7 @@ void Visualizer::ClearGraphSimulation() {
 }
 
 void Visualizer::UpdateKruskals(float dt) {
+  // Advances graph replay based on animation speed settings.
   if (!m_ShowGraphSimulation || !m_GraphPlaying)
     return;
 

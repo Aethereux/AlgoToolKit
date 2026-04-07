@@ -1,8 +1,8 @@
 #include "RecursionAlgorithm.h"
 #include <iostream>
 
-// Update the class scope to FactorialAlgorithm
 int FactorialAlgorithm::Factorial(int n) {
+    // Records recursive call/return states so the UI can animate the stack.
     if (!m_Visualizer)
         return 1;
 
@@ -58,6 +58,7 @@ int Recursion::Factorial(int n) {
 }
 
 int Recursion::Fibonacci(int n){
+    // Classic recursive Fibonacci used for sequence generation.
     if(n <= 1){
         return n;
     }
@@ -66,6 +67,7 @@ int Recursion::Fibonacci(int n){
 }
 
 void Recursion::TowerOfHanoi(int numDisks, char source, char auxiliary, char destination){
+    // Resets output buffers, then records full recursive trace and moves.
     m_TowerMoves.clear();
     m_TowerTrace.clear();
     AddTowerTraceLine("Base Case: n == 1");
@@ -73,6 +75,7 @@ void Recursion::TowerOfHanoi(int numDisks, char source, char auxiliary, char des
 }
 
 void Recursion::TowerOfHanoiTracked(int numDisks, char source, char auxiliary, char destination) {
+    // Captures both the recursion trace text and actual move operations.
     AddTowerTraceLine("Call: TowerOfHanoi(" + std::to_string(numDisks) + ", " + source + ", " +
                       auxiliary + ", " + destination + ")");
 

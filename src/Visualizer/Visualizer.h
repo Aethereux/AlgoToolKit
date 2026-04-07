@@ -81,9 +81,10 @@ public:
   bool HasFibonacciSimulation() const { return m_ShowFibonacciIllustration; }
   void RenderFibonacciGoldenRatio();
 
-  
+  // Graph/MST simulation lifecycle.
   void SetGraphSimulation(int vertexCount, const std::vector<Edge> &edges,
                           const std::vector<GraphStep> &steps);
+  // Starts or restarts graph step playback.
   void PlayGraphSimulation();
   void ClearGraphSimulation();
   bool HasGraphSimulation() const { return m_ShowGraphSimulation; }

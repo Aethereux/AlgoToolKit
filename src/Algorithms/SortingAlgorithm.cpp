@@ -2,6 +2,7 @@
 
 void SortingAlgorithm::Compare(int idx1, int idx2,
                                const std::vector<int> &array) {
+  // Emits a comparison step without mutating the array.
   if (m_Visualizer) {
     AlgorithmStep step;
     step.array = array;
@@ -15,6 +16,7 @@ void SortingAlgorithm::Compare(int idx1, int idx2,
 }
 
 void SortingAlgorithm::Swap(int idx1, int idx2, std::vector<int> &array) {
+  // Swaps two values and records the post-swap snapshot.
   if (m_Visualizer) {
     std::swap(array[idx1], array[idx2]);
     AlgorithmStep step;
@@ -29,6 +31,7 @@ void SortingAlgorithm::Swap(int idx1, int idx2, std::vector<int> &array) {
 }
 
 void SortingAlgorithm::Overwrite(int idx, int value, std::vector<int> &array) {
+  // Writes a value at index and records that write operation.
   if (m_Visualizer) {
     array[idx] = value;
     AlgorithmStep step;
@@ -42,6 +45,7 @@ void SortingAlgorithm::Overwrite(int idx, int value, std::vector<int> &array) {
 }
 
 void SortingAlgorithm::MarkSorted(int idx, const std::vector<int> &array) {
+  // Marks an index as finalized in the visual timeline.
   if (m_Visualizer) {
     AlgorithmStep step;
     step.array = array;
@@ -54,6 +58,7 @@ void SortingAlgorithm::MarkSorted(int idx, const std::vector<int> &array) {
 }
 
 void BubbleSort::Sort(std::vector<int> &array) {
+  // Bubble Sort: repeatedly move the largest unsorted element to the end.
   int n = array.size();
   for (int i = 0; i < n - 1; i++) {
     bool swapped = false;
@@ -72,6 +77,7 @@ void BubbleSort::Sort(std::vector<int> &array) {
 }
 
 void SelectionSort::Sort(std::vector<int> &array) {
+  // Selection Sort: select the minimum from the unsorted suffix each pass.
   int n = array.size();
   for (int i = 0; i < n; i++) {
     int minIndex = i;
@@ -92,6 +98,7 @@ void SelectionSort::Sort(std::vector<int> &array) {
 }
 
 void InsertionSort::Sort(std::vector<int> &array) {
+  // Insertion Sort: shift larger values right and insert current element.
   int n = array.size();
   for (int i = 1; i < n; i++) {
     int element = array[i];

@@ -120,6 +120,7 @@ Menu::Menu() {
 }
 
 void Menu::Render() {
+  // Central frame update: draws shell UI and dispatches active visualizer mode.
   const ImGuiViewport *viewport = ImGui::GetMainViewport();
   ImGui::SetNextWindowPos(viewport->WorkPos);
   ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -623,6 +624,7 @@ void Menu::RenderRecursionTab(float sidebarWidth) {
 }
 
 void Menu::RunSelectedAlgorithm() {
+  // Runs the selected sorting algorithm once and then plays recorded steps.
   if (!m_Visualizer)
     return;
 
@@ -669,6 +671,7 @@ void Menu::RunSelectedAlgorithm() {
 }
 
 void Menu::RunComparisonBenchmark() {
+  // Benchmarks all sorting algorithms against the same original input array.
   if (!m_Visualizer)
     return;
 
@@ -853,6 +856,7 @@ void Menu::RenderComparisonTable() {
 }
 
 void Menu::GenerateGraphSimulation() {
+  // Creates a connected weighted graph and records MST steps for replay.
   if (!m_Visualizer) return;
 
   std::random_device rd;
@@ -862,6 +866,7 @@ void Menu::GenerateGraphSimulation() {
 
   int n = m_GraphVertices;
 
+  // Build a readable connected graph with a bit of randomness for interesting MST runs.
   int cols = (int)ceilf(sqrtf((float)n));
 
   std::vector<Edge> edges;
@@ -910,6 +915,7 @@ void Menu::GenerateGraphSimulation() {
 }
 
 void Menu::RunGraphSimulation() {
+  // Playback entry for MST mode: generate on demand, then animate.
   if (!m_Visualizer)
     return;
 
@@ -925,6 +931,7 @@ void Menu::Shutdown() {
 }
 
 void Menu::RunRecursionSimulation() {
+  // Builds recursion artifacts for the selected simulation and starts playback.
   if (!m_Visualizer)
     return;
 
