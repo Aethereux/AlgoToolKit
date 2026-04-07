@@ -81,7 +81,7 @@ public:
   bool HasFibonacciSimulation() const { return m_ShowFibonacciIllustration; }
   void RenderFibonacciGoldenRatio();
 
-  // Kruskal's / Graph simulation
+  
   void SetGraphSimulation(int vertexCount, const std::vector<Edge> &edges,
                           const std::vector<GraphStep> &steps);
   void PlayGraphSimulation();
@@ -106,32 +106,32 @@ public:
   VisualizationMode GetVisualizationMode() const { return m_VisualizationMode; }
 
 private:
-  // UI panels
+  
   void RenderControlPanel();
   void RenderStepInfo();
 
-  // Visualizations
+  
   void RenderBarGraph(const std::vector<int> &arr, const ImVec2 &origin,
                       const ImVec2 &size);
 
   void RenderLadder(const std::vector<int> &arr, const ImVec2 &origin, const ImVec2 &size);
 
-  // Animation helpers
+  
   void UpdateElementStates(float dt);
   void SyncElementStates(const std::vector<int> &arr);
 
-  // Color helpers
+  
   ImU32 GetThemeColor(StepType type) const;
   ImU32 GetElementColor(int idx) const;
   ImVec4 GetThemeColorVec(StepType type) const;
   void LerpColor(float &r, float &g, float &b, float &a, float tr, float tg,
                  float tb, float ta, float t);
 
-  // Easing
+  
   static float EaseOutCubic(float t);
   static float EaseInOutQuad(float t);
 
-  // State
+  
   std::vector<int> m_OriginalArray;
   std::vector<AlgorithmStep> m_Steps;
   std::vector<ElementState> m_Elements;
@@ -161,7 +161,7 @@ private:
   int m_FibonacciStep = 0;
   int m_FibonacciLastFollowedIndex = -1;
 
-  // Graph / Kruskal simulation
+  
   bool m_ShowGraphSimulation = false;
   bool m_GraphPlaying = false;
   float m_GraphPlayTimer = 0.0f;

@@ -234,7 +234,7 @@ void Visualizer::UpdateTowerOfHanoi(float dt) {
 
 void Visualizer::RenderTowerOfHanoi() {
   if (!m_ShowTowerIllustration) {
-    // Match post-start vertical anchor: reserve controls row + spacer.
+    
     ImGui::Dummy(ImVec2(0.0f, ImGui::GetFrameHeightWithSpacing() + 6.0f));
 
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
@@ -477,7 +477,7 @@ void Visualizer::RenderTowerOfHanoi() {
   drawList->AddText(ImVec2(pegX[1] - 4.0f, baseY + 14.0f), IM_COL32_WHITE, "B");
   drawList->AddText(ImVec2(pegX[2] - 4.0f, baseY + 14.0f), IM_COL32_WHITE, "C");
 
-  // Top-right trace panel (same geometry as Fibonacci panel)
+  
   float lineH = ImGui::GetTextLineHeightWithSpacing();
   float boxW = canvasSize.x * 0.30f - 24.0f;
   float boxH = 14.0f + (lineH * 7.0f) + 10.0f;
@@ -559,8 +559,8 @@ void Visualizer::RenderTowerOfHanoi() {
       ImGui::TextUnformatted(displayText.c_str());
       ImGui::PopStyleColor();
 
-      // Add spacing after a return only when the next meaningful line is
-      // outside the call/return group.
+      
+      
       if (getTraceKind(m_TowerTrace[i]) == 1) {
         size_t nextIndex = i + 1;
         while (nextIndex < m_TowerTrace.size() && m_TowerTrace[nextIndex].empty())
@@ -609,7 +609,7 @@ void Visualizer::RenderTowerOfHanoi() {
 
 void Visualizer::RenderFibonacciGoldenRatio() {
   if (!m_ShowFibonacciIllustration) {
-    // Keep pre-start canvas aligned with post-start by reserving the controls row.
+    
     ImGui::Dummy(ImVec2(0.0f, ImGui::GetFrameHeightWithSpacing() + 6.0f));
 
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
@@ -665,7 +665,7 @@ void Visualizer::RenderFibonacciGoldenRatio() {
 
   const int n = static_cast<int>(m_FibonacciSequence.size());
   if (n < 2) {
-    // Keep low-data placeholder aligned with post-start layout.
+    
     ImGui::Dummy(ImVec2(0.0f, ImGui::GetFrameHeightWithSpacing() + 6.0f));
 
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
@@ -983,7 +983,7 @@ void Visualizer::RenderFibonacciGoldenRatio() {
   ImGui::PopStyleColor();
   ImGui::PopID();
 
-  // Restore cursor to canvas origin before reserving draw region.
+  
   ImGui::SetCursorScreenPos(origin);
   ImGui::Dummy(canvasSize);
   int currentSeqNum = std::max(1, std::min(n, m_FibonacciStep + 1));
@@ -1023,11 +1023,11 @@ void Visualizer::SyncElementStates(const std::vector<int> &arr) {
     auto &e = m_Elements[i];
     e.targetHeight = static_cast<float>(arr[i]) / maxVal;
 
-    // First time — snap to position
+    
     if (e.currentHeight == 0.0f && m_AnimationProgress >= 1.0f)
       e.currentHeight = e.targetHeight;
 
-    // Determine target color
+    
     StepType elType = StepType::Default;
     if (m_Config.highlightOps &&
         (static_cast<int>(i) == idx1 || static_cast<int>(i) == idx2))
@@ -1039,7 +1039,7 @@ void Visualizer::SyncElementStates(const std::vector<int> &arr) {
     e.targetB = tc.z;
     e.targetA = tc.w;
 
-    // Glow for active elements
+    
     bool isActive =
         (static_cast<int>(i) == idx1 || static_cast<int>(i) == idx2);
     e.targetGlow = (m_Config.showGlow && isActive) ? 1.0f : 0.0f;
@@ -1052,21 +1052,21 @@ void Visualizer::UpdateElementStates(float dt) {
   float lerpRate = std::min(1.0f, dt * speed * 6.0f);
 
   for (auto &e : m_Elements) {
-    // Height — ease toward target
+    
     float diff = e.targetHeight - e.currentHeight;
     e.currentHeight += diff * EaseOutCubic(lerpRate);
 
-    // Color — smooth lerp
+    
     LerpColor(e.currentR, e.currentG, e.currentB, e.currentA, e.targetR,
               e.targetG, e.targetB, e.targetA, lerpRate);
 
-    // Scale
+    
     e.scale += (e.targetScale - e.scale) * lerpRate;
 
-    // Glow
+    
     e.glowIntensity += (e.targetGlow - e.glowIntensity) * lerpRate * 0.8f;
 
-    // Pulse phase (continuous)
+    
     e.pulsePhase += dt * 4.0f;
     if (e.pulsePhase > 2.0f * (float)M_PI)
       e.pulsePhase -= 2.0f * (float)M_PI;
@@ -1077,7 +1077,7 @@ void Visualizer::Update() {
   float dt = ImGui::GetIO().DeltaTime;
   m_GlobalTime += dt;
 
-  // Auto-play timer
+  
   if (m_IsPlaying && !m_Steps.empty() && m_AnimationProgress >= 0.9f) {
     float speed = static_cast<float>(m_Config.animationSpeed);
     float delay = (210.0f - speed) / 1000.0f;
@@ -1089,7 +1089,7 @@ void Visualizer::Update() {
     }
   }
 
-  // Advance animation progress
+  
   if (m_Config.smoothAnimation && m_AnimationProgress < 1.0f) {
     float animSpeed = static_cast<float>(m_Config.animationSpeed) / 30.0f;
     m_AnimationProgress += dt * animSpeed * 2.5f;
@@ -1099,7 +1099,7 @@ void Visualizer::Update() {
     m_AnimationProgress = 1.0f;
   }
 
-  // Animate individual elements
+  
   UpdateElementStates(dt);
 }
 
@@ -1146,7 +1146,7 @@ void Visualizer::RenderControlPanel() {
 
   if (GetTotalSteps() > 0) {
 
-    // Play / Pause
+    
     if (m_IsPlaying) {
       ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(200, 80, 60, 255));
       ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
@@ -1168,7 +1168,7 @@ void Visualizer::RenderControlPanel() {
 
     ImGui::SameLine();
 
-    // Step controls
+    
     ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(70, 70, 90, 255));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(90, 90, 120, 255));
     if (ImGui::Button(ICON_FA_STEP_BACKWARD))
@@ -1178,7 +1178,7 @@ void Visualizer::RenderControlPanel() {
       StepForward();
     ImGui::PopStyleColor(2);
 
-    // Step counter
+    
     ImGui::SameLine();
     ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.7f, 1.0f), "Step %d / %d",
                        std::max(0, m_CurrentStepIndex + 1), GetTotalSteps());
@@ -1186,7 +1186,7 @@ void Visualizer::RenderControlPanel() {
 
   ImGui::PopStyleVar(3);
 
-  // Add vertical padding so graph doesn't overlap the buttons
+  
   ImGui::Dummy(ImVec2(0, 16.0f));
 }
 
@@ -1237,7 +1237,7 @@ void Visualizer::RenderBarGraph(const std::vector<int> &arr,
     actualW = 2.0f;
   float maxH = size.y - 24.0f;
 
-  SyncElementStates(arr); // ensure we have targets
+  SyncElementStates(arr); 
 
   for (int i = 0; i < n; ++i) {
     const auto &e = m_Elements[i];
@@ -1251,7 +1251,7 @@ void Visualizer::RenderBarGraph(const std::vector<int> &arr,
 
     ImU32 col = GetElementColor(i);
 
-    // Glow (drawn behind)
+    
     if (m_Config.showGlow && e.glowIntensity > 0.01f) {
       float pulse = 0.7f + 0.3f * sinf(e.pulsePhase);
       int glowAlpha = static_cast<int>(40.0f * e.glowIntensity * pulse);
@@ -1262,7 +1262,7 @@ void Visualizer::RenderBarGraph(const std::vector<int> &arr,
                         ImVec2(barMax.x + expand, barMax.y), glowCol, 6.0f);
     }
 
-    // Bar body
+    
     switch (m_Config.barStyle) {
     case BarStyle::Rounded: {
       float r = std::min(5.0f, actualW * 0.25f);
@@ -1274,7 +1274,7 @@ void Visualizer::RenderBarGraph(const std::vector<int> &arr,
       break;
     }
     case BarStyle::Gradient: {
-      // Top color = original, bottom = darker
+      
       ImVec4 cv = ImGui::ColorConvertU32ToFloat4(col);
       ImU32 topCol = col;
       ImU32 botCol = IM_COL32((int)(cv.x * 100), (int)(cv.y * 100),
@@ -1293,7 +1293,7 @@ void Visualizer::RenderBarGraph(const std::vector<int> &arr,
       if (ty < origin.y)
         ty = origin.y;
 
-      // Pill background
+      
       float px = 3.0f, py = 1.0f;
       dl->AddRectFilled(ImVec2(tx - px, ty - py),
                         ImVec2(tx + tsz.x + px, ty + tsz.y + py),
@@ -1339,8 +1339,8 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
   stackMin.y += titleGap;
   retMin.y += titleGap;
 
-  // Match the same box height as the "Calls and Returns" panel in Fibonacci
-  // and Tower of Hanoi: 14 + (lineH * 7) + 10
+  
+  
   {
     float lineH = ImGui::GetTextLineHeightWithSpacing();
     float boxH  = 14.0f + (lineH * 7.0f) + 10.0f;
@@ -1484,7 +1484,7 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
   dl->AddRectFilled(retMin, retMax, IM_COL32(18, 22, 30, 210), 8.0f);
   dl->AddRect(retMin, retMax, IM_COL32(110, 125, 150, 170), 8.0f, 0, 1.5f);
 
-  // Scrollable child inside the box
+  
   const float pad = 6.0f;
   ImGui::SetCursorScreenPos(ImVec2(retMin.x + pad, retMin.y + pad));
   ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0, 0, 0, 0));
@@ -1529,7 +1529,7 @@ void Visualizer::RenderLadder(const std::vector<int> &arr, const ImVec2 &origin,
       ImGui::PopStyleColor();
     }
 
-    // Auto-scroll to the newest entry
+    
     if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY() - 1.0f)
       ImGui::SetScrollHereY(1.0f);
 
@@ -1643,7 +1643,7 @@ void Visualizer::RenderKruskals() {
   const ImU32 panelTextMuted = shade(themeDefault, 1.70f, 255);
   const ImU32 nodeBorder = shade(themeDefault, 0.24f, 255);
 
-  // Component colour palette (8 distinct colours, cycling)
+  
   const ImU32 kCompColors[] = {
       shade(themeDefault, 1.00f, 255),
       shade(themeCompare, 1.00f, 255),
@@ -1656,7 +1656,7 @@ void Visualizer::RenderKruskals() {
   };
   static const int kNumColors = 8;
 
-  //  Control row (Play / Step / counter) 
+  
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 6));
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
   ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));
@@ -1664,7 +1664,7 @@ void Visualizer::RenderKruskals() {
   if (m_ShowGraphSimulation) {
     int maxStep = static_cast<int>(m_GraphSteps.size());
 
-    // Play / Pause
+    
     if (m_GraphPlaying) {
       ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(200,  80,  60, 255));
       ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(220, 100,  80, 255));
@@ -1724,7 +1724,7 @@ void Visualizer::RenderKruskals() {
   int n = m_GraphVertexCount;
 
   ImVec2 avail = ImGui::GetContentRegionAvail();
-  avail.y -= 28.0f; // leave room for the bottom status line
+  avail.y -= 28.0f; 
   if (avail.y < 80.0f) avail.y = 80.0f;
 
   float edgeListW = avail.x * 0.30f;
@@ -1733,11 +1733,11 @@ void Visualizer::RenderKruskals() {
   ImVec2 graphOrigin = ImGui::GetCursorScreenPos();
   ImDrawList *dl = ImGui::GetWindowDrawList();
 
-  // Clipping rect so drawing stays in the graph area
+  
   dl->PushClipRect(graphOrigin,
                    ImVec2(graphOrigin.x + graphW, graphOrigin.y + avail.y), true);
 
-  // Background
+  
   dl->AddRectFilled(graphOrigin,
                     ImVec2(graphOrigin.x + graphW, graphOrigin.y + avail.y),
           graphBg, 8.0f);
@@ -1759,7 +1759,7 @@ void Visualizer::RenderKruskals() {
   for (int i = 0; i < n; ++i) {
     int row = i / cols;
     int col = i % cols;
-    // Centre the last (possibly incomplete) row
+    
     int nodesInRow = (row == rows - 1 && n % cols != 0) ? n % cols : cols;
     float rowOffsetX = (cols - nodesInRow) * cellW * 0.5f;
     nodePos[i] = ImVec2(
@@ -1767,12 +1767,12 @@ void Visualizer::RenderKruskals() {
         graphOrigin.y + marginY + row * cellH);
   }
 
-  // Draw edges
+  
   for (const auto &e : m_GraphEdges) {
     ImVec2 p0 = nodePos[e.src];
     ImVec2 p1 = nodePos[e.dest];
 
-    // Determine edge state at current step
+    
     bool isCurEdge  = (cur.u == e.src && cur.v == e.dest) ||
                       (cur.u == e.dest && cur.v == e.src);
     bool isInMST    = false;
@@ -1786,7 +1786,7 @@ void Visualizer::RenderKruskals() {
       }
     }
 
-    // Check if this edge was rejected in any prior step
+    
     if (!isInMST && !isCurEdge) {
       for (int s = 0; s <= m_GraphStep; ++s) {
         const GraphStep &gs = m_GraphSteps[s];
@@ -1825,12 +1825,12 @@ void Visualizer::RenderKruskals() {
 
     dl->AddLine(p0, p1, color, thickness);
 
-    // Weight label at midpoint
+    
     ImVec2 mid((p0.x + p1.x) * 0.5f, (p0.y + p1.y) * 0.5f);
     char wbuf[8];
     snprintf(wbuf, sizeof(wbuf), "%d", e.weight);
     ImVec2 tsz = ImGui::CalcTextSize(wbuf);
-    // Small background pill
+    
     dl->AddRectFilled(ImVec2(mid.x - tsz.x * 0.5f - 3, mid.y - tsz.y * 0.5f - 1),
                       ImVec2(mid.x + tsz.x * 0.5f + 3, mid.y + tsz.y * 0.5f + 1),
               shade(themeDefault, 0.20f, 200), 3.0f);
@@ -1840,7 +1840,7 @@ void Visualizer::RenderKruskals() {
                 wbuf);
   }
 
-  // Draw nodes
+  
   float nodeR = 11.0f;
   for (int i = 0; i < n; ++i) {
     int compIdx = (i < (int)cur.componentId.size()) ? cur.componentId[i] : i;
@@ -1849,7 +1849,7 @@ void Visualizer::RenderKruskals() {
     dl->AddCircleFilled(nodePos[i], nodeR, nodeBorder);
     dl->AddCircleFilled(nodePos[i], nodeR - 2.0f, nodeColor);
 
-    // Node label
+    
     char nbuf[4];
     snprintf(nbuf, sizeof(nbuf), "%d", i + 1);
     ImVec2 nsz = ImGui::CalcTextSize(nbuf);
@@ -1950,7 +1950,7 @@ void Visualizer::RenderKruskals() {
         }
       }
 
-      // Row background for current edge
+      
       if (isCurEdge) {
         ImVec2 rmin = ImGui::GetCursorScreenPos();
         ImVec2 rmax(rmin.x + edgeListW - 4,
@@ -1959,7 +1959,7 @@ void Visualizer::RenderKruskals() {
                                                   rowHighlight, 3.0f);
       }
 
-      // Status icon
+      
       const char *icon;
       ImVec4 iconColor;
       if (isInMST) {
@@ -2007,8 +2007,8 @@ void Visualizer::RenderKruskals() {
   ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(shade(themeCompare, 1.0f, 255)),
                      "Weighted Time: %d", cur.mstCost);
 
-  ImGui::EndChild(); // edgeScroll
-  ImGui::EndChild(); // edgeList
+  ImGui::EndChild(); 
+  ImGui::EndChild(); 
 
   ImGui::SetCursorScreenPos(ImVec2(graphOrigin.x, graphOrigin.y + avail.y + 4.0f));
 
@@ -2025,7 +2025,7 @@ void Visualizer::RenderKruskals() {
                  shade(themeCompare, 1.0f, 255));
   ImGui::TextColored(descColor, "%s", cur.description.c_str());
 
-  // Progress bar on the right
+  
   float progress = m_GraphSteps.empty() ? 0.0f
       : static_cast<float>(m_GraphStep + 1) / static_cast<float>(m_GraphSteps.size());
   ImGui::SameLine(ImGui::GetContentRegionAvail().x - 110.0f +

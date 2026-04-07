@@ -6,13 +6,13 @@
 
 class Visualizer;
 class SortingAlgorithm;
-class RecursionAlgorithm; // Forward declaration
+class RecursionAlgorithm; 
 
 struct SortCompareResult {
     std::string name;
     double      timeMs      = 0.0;
     int         comparisons = 0;
-    int         writes      = 0; // swaps + overwrites
+    int         writes      = 0; 
     int         totalOps    = 0;
 };
 
@@ -49,12 +49,12 @@ private:
     double m_LastExecutionTimeMs = 0.0;
     int m_LastOperationsCount = 0;
 
-    // Graph tab state
-    int m_SelectedGraphAlgorithm = 0; // 0 = Kruskal's
+    
+    int m_SelectedGraphAlgorithm = 0; 
     int m_GraphVertices = 6;
     bool m_GraphHasRun = false;
 
-    // Comparison table
+    
     std::vector<SortCompareResult> m_CompareResults;
     bool m_ShowComparison = false;
 

@@ -36,7 +36,7 @@ void ImGuiHelper::drawTabHorizontally(const char* childName, ImVec2 childSize, c
     int btnHeight = std::clamp((int)ImGuiHelper::getHeight(), 20, 60);
     btnWidth = std::max(minWidth, std::min(btnWidth, maxWidth));
 
-    // center buttons
+    
     ImGui::SetCursorPosX((childSize.x - btnWidth * numTabs - ImGui::GetStyle().ItemSpacing.x) / 2);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f); 
