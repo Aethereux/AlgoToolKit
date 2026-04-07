@@ -1,4 +1,5 @@
 # Build directories
+.claude/
 build/
 bin/
 lib/

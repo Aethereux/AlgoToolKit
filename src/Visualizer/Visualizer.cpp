@@ -1547,10 +1547,6 @@ int Visualizer::GetStepCountOfType(StepType type) const {
   return count;
 }
 
-// ---------------------------------------------------------------------------
-// Graph / Kruskal simulation
-// ---------------------------------------------------------------------------
-
 void Visualizer::SetGraphSimulation(int vertexCount,
                                     const std::vector<Edge> &edges,
                                     const std::vector<GraphStep> &steps) {
@@ -1559,8 +1555,19 @@ void Visualizer::SetGraphSimulation(int vertexCount,
   m_GraphSteps = steps;
   m_GraphStep = 0;
   m_GraphPlayTimer = 0.0f;
-  m_GraphPlaying = !steps.empty();
+  m_GraphPlaying = false;
   m_ShowGraphSimulation = true;
+}
+
+void Visualizer::PlayGraphSimulation() {
+  if (!m_ShowGraphSimulation || m_GraphSteps.empty())
+    return;
+
+  if (m_GraphStep >= static_cast<int>(m_GraphSteps.size()) - 1)
+    m_GraphStep = 0;
+
+  m_GraphPlayTimer = 0.0f;
+  m_GraphPlaying = true;
 }
 
 void Visualizer::ClearGraphSimulation() {
@@ -1649,7 +1656,7 @@ void Visualizer::RenderKruskals() {
   };
   static const int kNumColors = 8;
 
-  // ── Control row (Play / Step / counter) ────────────────────────────────
+  //  Control row (Play / Step / counter) 
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 6));
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
   ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));

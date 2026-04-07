@@ -84,6 +84,7 @@ public:
   // Kruskal's / Graph simulation
   void SetGraphSimulation(int vertexCount, const std::vector<Edge> &edges,
                           const std::vector<GraphStep> &steps);
+  void PlayGraphSimulation();
   void ClearGraphSimulation();
   bool HasGraphSimulation() const { return m_ShowGraphSimulation; }
   void UpdateKruskals(float dt);

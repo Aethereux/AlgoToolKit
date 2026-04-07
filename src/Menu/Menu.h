@@ -37,6 +37,7 @@ private:
     void RunSelectedAlgorithm();
     void RunComparisonBenchmark();
     void RunRecursionSimulation();
+    void GenerateGraphSimulation();
     void RunGraphSimulation();
 
     Visualizer* m_Visualizer = nullptr;

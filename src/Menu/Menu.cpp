@@ -485,7 +485,7 @@ void Menu::RenderGraphTab(float sidebarWidth) {
   ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.20f, 0.25f, 0.35f, 1.0f));
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.35f, 0.45f, 1.0f));
   if (ImGui::Button(ICON_FA_SYNC " Generate", ImVec2(halfBtn, 28))) {
-    RunGraphSimulation();
+    GenerateGraphSimulation();
   }
   ImGui::SameLine();
   if (ImGui::Button(ICON_FA_UNDO " Reset", ImVec2(halfBtn, 28))) {
@@ -887,7 +887,7 @@ void Menu::RenderComparisonTable() {
   ImGui::PopStyleColor();
 }
 
-void Menu::RunGraphSimulation() {
+void Menu::GenerateGraphSimulation() {
   if (!m_Visualizer) return;
 
   std::random_device rd;
@@ -950,6 +950,16 @@ void Menu::RunGraphSimulation() {
   }
 
   m_GraphHasRun = true;
+}
+
+void Menu::RunGraphSimulation() {
+  if (!m_Visualizer)
+    return;
+
+  if (!m_Visualizer->HasGraphSimulation())
+    GenerateGraphSimulation();
+
+  m_Visualizer->PlayGraphSimulation();
 }
 
 void Menu::Shutdown() {
